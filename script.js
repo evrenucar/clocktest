@@ -6,8 +6,14 @@ if (isNaN(volume)) volume = 0.5;
 let showHourBar = localStorage.getItem('showHourBar');
 showHourBar = showHourBar === null ? true : showHourBar === 'true';
 
+let showDigitalClock = localStorage.getItem('showDigitalClock');
+showDigitalClock = showDigitalClock === null ? true : showDigitalClock === 'true';
+
 let lastHourPlayed = null;
 let lastQuarterPlayed = null;
+
+const gainNode = new Tone.Gain(volume).toDestination();
+const synth = new Tone.Synth().connect(gainNode);
 
 const settingsButton = document.getElementById('settings-button');
 const settingsPanel = document.getElementById('settings-panel');
@@ -17,6 +23,8 @@ const volumeControl = document.getElementById('volume');
 const hourBarCheckbox = document.getElementById('hour-bar-toggle');
 const hourProgressBar = document.getElementById('hour-progress-bar');
 const hourMarkers = document.getElementById('hour-markers');
+const digitalClockCheckbox = document.getElementById('digital-clock-toggle');
+const timeDisplay = document.getElementById('time-display');
 
 settingsButton.addEventListener('click', () => {
     settingsPanel.classList.toggle('visible');
@@ -26,7 +34,9 @@ hourlyCheckbox.checked = hourlyDing;
 quarterCheckbox.checked = quarterDing;
 volumeControl.value = volume;
 hourBarCheckbox.checked = showHourBar;
+digitalClockCheckbox.checked = showDigitalClock;
 updateHourBarVisibility();
+updateDigitalClockVisibility();
 
 hourlyCheckbox.addEventListener('change', () => {
     hourlyDing = hourlyCheckbox.checked;
@@ -41,6 +51,7 @@ quarterCheckbox.addEventListener('change', () => {
 volumeControl.addEventListener('input', () => {
     volume = parseFloat(volumeControl.value);
     localStorage.setItem('volume', volume);
+    gainNode.gain.value = volume;
 });
 
 hourBarCheckbox.addEventListener('change', () => {
@@ -49,29 +60,21 @@ hourBarCheckbox.addEventListener('change', () => {
     updateHourBarVisibility();
 });
 
+digitalClockCheckbox.addEventListener('change', () => {
+    showDigitalClock = digitalClockCheckbox.checked;
+    localStorage.setItem('showDigitalClock', showDigitalClock);
+    updateDigitalClockVisibility();
+});
+
 document.getElementById('test-hourly').addEventListener('click', playHourlyChirp);
 document.getElementById('test-quarter').addEventListener('click', playQuarterChirp);
 
-function playChirp(startFreq, endFreq, duration) {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(startFreq, ctx.currentTime);
-    osc.frequency.linearRampToValueAtTime(endFreq, ctx.currentTime + duration);
-    gain.gain.value = volume;
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + duration);
-}
-
 function playHourlyChirp() {
-    playChirp(800, 1200, 0.6);
+    synth.triggerAttackRelease('C4', 1);
 }
 
 function playQuarterChirp() {
-    playChirp(1200, 900, 0.5);
+    synth.triggerAttackRelease('G4', 0.3);
 }
 
 function updateProgress() {
@@ -118,14 +121,14 @@ function createMarkers() {
         }
         marker.style.left = (i / 24) * 100 + '%';
 
-        const line = document.createElement('div');
-        line.classList.add('marker-line');
-        marker.appendChild(line);
-
         const label = document.createElement('div');
         label.classList.add('marker-label');
         label.textContent = i;
         marker.appendChild(label);
+
+        const line = document.createElement('div');
+        line.classList.add('marker-line');
+        marker.appendChild(line);
 
         markersContainer.appendChild(marker);
     }
@@ -143,15 +146,15 @@ function createHourMarkers() {
         }
         marker.style.left = (i / 60) * 100 + '%';
 
-        const line = document.createElement('div');
-        line.classList.add('marker-line');
-        marker.appendChild(line);
-
         if (i % 15 === 0) {
             const label = document.createElement('div');
             label.textContent = i;
             marker.appendChild(label);
         }
+
+        const line = document.createElement('div');
+        line.classList.add('marker-line');
+        marker.appendChild(line);
 
         container.appendChild(marker);
     }
@@ -160,6 +163,10 @@ function createHourMarkers() {
 function updateHourBarVisibility() {
     hourProgressBar.style.display = showHourBar ? 'block' : 'none';
     hourMarkers.style.display = showHourBar ? 'block' : 'none';
+}
+
+function updateDigitalClockVisibility() {
+    timeDisplay.style.display = showDigitalClock ? 'block' : 'none';
 }
 
 createMarkers();
