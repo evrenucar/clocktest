@@ -55,6 +55,12 @@ body {
     height: 20%;
     margin-bottom: 5px;
     position: relative;
+#hour-markers {
+    position: absolute;
+    top: -25px;
+    width: 100%;
+    height: 25px;
+    font-size: 12px;
 }
 
 #hour-progress {
@@ -62,6 +68,7 @@ body {
     height: 100%;
     width: 0%;
 }
+
 
 #progress-bar {
     background-color: #444;

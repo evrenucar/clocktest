@@ -1,6 +1,11 @@
 let hourlyDing = localStorage.getItem('hourlyDing') === 'true';
 let quarterDing = localStorage.getItem('quarterDing') === 'true';
-let volume = parseFloat(localStorage.getItem('volume')) || 0.5;
+let volume = parseFloat(localStorage.getItem('volume'));
+if (isNaN(volume)) volume = 0.5;
+
+let showHourBar = localStorage.getItem('showHourBar');
+showHourBar = showHourBar === null ? true : showHourBar === 'true';
+
 let lastHourPlayed = null;
 let lastQuarterPlayed = null;
 
@@ -9,6 +14,9 @@ const settingsPanel = document.getElementById('settings-panel');
 const hourlyCheckbox = document.getElementById('hourly-ding');
 const quarterCheckbox = document.getElementById('quarter-ding');
 const volumeControl = document.getElementById('volume');
+const hourBarCheckbox = document.getElementById('hour-bar-toggle');
+const hourProgressBar = document.getElementById('hour-progress-bar');
+const hourMarkers = document.getElementById('hour-markers');
 
 settingsButton.addEventListener('click', () => {
     settingsPanel.classList.toggle('visible');
@@ -17,6 +25,8 @@ settingsButton.addEventListener('click', () => {
 hourlyCheckbox.checked = hourlyDing;
 quarterCheckbox.checked = quarterDing;
 volumeControl.value = volume;
+hourBarCheckbox.checked = showHourBar;
+updateHourBarVisibility();
 
 hourlyCheckbox.addEventListener('change', () => {
     hourlyDing = hourlyCheckbox.checked;
@@ -33,38 +43,35 @@ volumeControl.addEventListener('input', () => {
     localStorage.setItem('volume', volume);
 });
 
-document.getElementById('test-hourly').addEventListener('click', playDing);
-document.getElementById('test-quarter').addEventListener('click', playDoubleClick);
+hourBarCheckbox.addEventListener('change', () => {
+    showHourBar = hourBarCheckbox.checked;
+    localStorage.setItem('showHourBar', showHourBar);
+    updateHourBarVisibility();
+});
 
-function playDing() {
+document.getElementById('test-hourly').addEventListener('click', playHourlyChirp);
+document.getElementById('test-quarter').addEventListener('click', playQuarterChirp);
+
+function playChirp(startFreq, endFreq, duration) {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(startFreq, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(endFreq, ctx.currentTime + duration);
     gain.gain.value = volume;
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start();
-    osc.stop(ctx.currentTime + 0.5);
+    osc.stop(ctx.currentTime + duration);
 }
 
-function playDoubleClick() {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    function click(time) {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(660, time);
-        gain.gain.setValueAtTime(volume, time);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(time);
-        osc.stop(time + 0.1);
-    }
-    const now = ctx.currentTime;
-    click(now);
-    click(now + 0.2);
+function playHourlyChirp() {
+    playChirp(800, 1200, 0.6);
+}
+
+function playQuarterChirp() {
+    playChirp(1200, 900, 0.5);
 }
 
 function updateProgress() {
@@ -84,12 +91,12 @@ function updateProgress() {
     document.getElementById('time-display').textContent = timeString;
 
     if (hourlyDing && minutes === 0 && seconds === 0 && hours !== lastHourPlayed) {
-        playDing();
+        playHourlyChirp();
         lastHourPlayed = hours;
     }
     const quarter = Math.floor(minutes / 15);
     if (quarterDing && minutes % 15 === 0 && seconds === 0 && quarter !== lastQuarterPlayed) {
-        playDoubleClick();
+        playQuarterChirp();
         lastQuarterPlayed = quarter;
     }
 }
@@ -111,7 +118,6 @@ function createMarkers() {
         }
         marker.style.left = (i / 24) * 100 + '%';
 
-
         const line = document.createElement('div');
         line.classList.add('marker-line');
         marker.appendChild(line);
@@ -125,6 +131,38 @@ function createMarkers() {
     }
 }
 
+function createHourMarkers() {
+    const container = document.getElementById('hour-markers');
+    for (let i = 0; i <= 60; i += 5) {
+        const marker = document.createElement('div');
+        marker.classList.add('marker');
+        if (i % 15 === 0) {
+            marker.classList.add('marker-large');
+        } else {
+            marker.classList.add('marker-small');
+        }
+        marker.style.left = (i / 60) * 100 + '%';
+
+        const line = document.createElement('div');
+        line.classList.add('marker-line');
+        marker.appendChild(line);
+
+        if (i % 15 === 0) {
+            const label = document.createElement('div');
+            label.textContent = i;
+            marker.appendChild(label);
+        }
+
+        container.appendChild(marker);
+    }
+}
+
+function updateHourBarVisibility() {
+    hourProgressBar.style.display = showHourBar ? 'block' : 'none';
+    hourMarkers.style.display = showHourBar ? 'block' : 'none';
+}
+
 createMarkers();
+createHourMarkers();
 updateProgress();
 setInterval(updateProgress, 1000); // update every second
