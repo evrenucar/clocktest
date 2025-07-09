@@ -22,6 +22,7 @@ function createMarkers() {
         } else {
             marker.classList.add('marker-small');
         }
+        marker.style.left = (i / 24) * 100 + '%';
 
         const line = document.createElement('div');
         line.classList.add('marker-line');
