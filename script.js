@@ -14,13 +14,18 @@ function updateProgress() {
 
 function createMarkers() {
     const markersContainer = document.getElementById('markers');
-    for (let i = 1; i <= 24; i++) {
+    for (let i = 0; i <= 24; i++) {
         const marker = document.createElement('div');
         marker.classList.add('marker');
         if (i % 3 === 0) {
             marker.classList.add('marker-large');
         } else {
             marker.classList.add('marker-small');
+        }
+        if (i === 0) {
+            marker.classList.add('marker-start');
+        } else if (i === 24) {
+            marker.classList.add('marker-end');
         }
         marker.style.left = (i / 24) * 100 + '%';
 
