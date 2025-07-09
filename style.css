@@ -90,8 +90,6 @@ body {
     height: 30px;
     margin-top: 10px;
     font-size: 12px;
-}
-
 #time-display {
     text-align: center;
     margin-bottom: 30px;
@@ -100,11 +98,13 @@ body {
 
 .marker {
     position: absolute;
+    top: 0;
     transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     align-items: center;
 }
+
 
 .marker-line {
     width: 1px;
@@ -141,6 +141,7 @@ body {
     margin-bottom: 2px;
     margin-top: 0;
 }
+
 
 .marker-large .marker-label {
     font-size: 2em;
