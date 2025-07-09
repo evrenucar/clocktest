@@ -111,11 +111,13 @@ function createMarkers() {
         }
         marker.style.left = (i / 24) * 100 + '%';
 
+
         const line = document.createElement('div');
         line.classList.add('marker-line');
         marker.appendChild(line);
 
         const label = document.createElement('div');
+        label.classList.add('marker-label');
         label.textContent = i;
         marker.appendChild(label);
 
