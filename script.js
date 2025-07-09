@@ -25,6 +25,8 @@ let lastQuarterPlayed = null;
 let lastMinutePlayed = null;
 let isTick = true; // true for tick, false for tock
 
+// Initialize audio context on first user interaction
+let audioInitialized = false;
 const gainNode = new Tone.Gain(volume).toDestination();
 const synth = new Tone.Synth({
     envelope: {
@@ -34,6 +36,13 @@ const synth = new Tone.Synth({
         release: 0.5
     }
 }).connect(gainNode);
+
+function initializeAudio() {
+    if (!audioInitialized) {
+        Tone.start();
+        audioInitialized = true;
+    }
+}
 
 const settingsButton = document.getElementById('settings-button');
 const settingsPanel = document.getElementById('settings-panel');
@@ -54,6 +63,7 @@ const markers = document.getElementById('markers');
 const hourNumbersCheckbox = document.getElementById('hour-numbers-toggle');
 
 settingsButton.addEventListener('click', () => {
+    initializeAudio();
     settingsPanel.classList.toggle('visible');
 });
 
@@ -138,10 +148,22 @@ hourNumbersCheckbox.addEventListener('change', () => {
     updateHourNumbersVisibility();
 });
 
-document.getElementById('test-hourly').addEventListener('click', playHourlyChirp);
-document.getElementById('test-quarter').addEventListener('click', playQuarterChirp);
-document.getElementById('test-minute').addEventListener('click', playMinuteChirp);
-document.getElementById('test-tick-tock').addEventListener('click', playTickTock);
+document.getElementById('test-hourly').addEventListener('click', () => {
+    initializeAudio();
+    playHourlyChirp();
+});
+document.getElementById('test-quarter').addEventListener('click', () => {
+    initializeAudio();
+    playQuarterChirp();
+});
+document.getElementById('test-minute').addEventListener('click', () => {
+    initializeAudio();
+    playMinuteChirp();
+});
+document.getElementById('test-tick-tock').addEventListener('click', () => {
+    initializeAudio();
+    playTickTock();
+});
 
 function playHourlyChirp() {
     // Create a 3-note melody using FatOscillator as per documentation
