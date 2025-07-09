@@ -1,5 +1,7 @@
-let hourlyDing = localStorage.getItem('hourlyDing') === 'true';
-let quarterDing = localStorage.getItem('quarterDing') === 'true';
+let hourSound = localStorage.getItem('hourSound') === 'true';
+let quarterSound = localStorage.getItem('quarterSound') === 'true';
+let minuteSound = localStorage.getItem('minuteSound') === 'true';
+let secondTickTock = localStorage.getItem('secondTickTock') === 'true';
 let volume = parseFloat(localStorage.getItem('volume'));
 if (isNaN(volume)) volume = 0.5;
 
@@ -9,43 +11,95 @@ showHourBar = showHourBar === null ? true : showHourBar === 'true';
 let showDigitalClock = localStorage.getItem('showDigitalClock');
 showDigitalClock = showDigitalClock === null ? true : showDigitalClock === 'true';
 
+let showProgressBar = localStorage.getItem('showProgressBar');
+showProgressBar = showProgressBar === null ? true : showProgressBar === 'true';
+
+let showNumbers = localStorage.getItem('showNumbers');
+showNumbers = showNumbers === null ? true : showNumbers === 'true';
+
+let showHourNumbers = localStorage.getItem('showHourNumbers');
+showHourNumbers = showHourNumbers === null ? true : showHourNumbers === 'true';
+
 let lastHourPlayed = null;
 let lastQuarterPlayed = null;
+let lastMinutePlayed = null;
+let isTick = true; // true for tick, false for tock
 
 const gainNode = new Tone.Gain(volume).toDestination();
-const synth = new Tone.Synth().connect(gainNode);
+const synth = new Tone.Synth({
+    envelope: {
+        attack: 0.01,
+        decay: 0.1,
+        sustain: 0.3,
+        release: 0.5
+    }
+}).connect(gainNode);
 
 const settingsButton = document.getElementById('settings-button');
 const settingsPanel = document.getElementById('settings-panel');
 const hourlyCheckbox = document.getElementById('hourly-ding');
 const quarterCheckbox = document.getElementById('quarter-ding');
+const minuteCheckbox = document.getElementById('minute-ding');
+const tickTockCheckbox = document.getElementById('tick-tock');
 const volumeControl = document.getElementById('volume');
 const hourBarCheckbox = document.getElementById('hour-bar-toggle');
 const hourProgressBar = document.getElementById('hour-progress-bar');
 const hourMarkers = document.getElementById('hour-markers');
 const digitalClockCheckbox = document.getElementById('digital-clock-toggle');
 const timeDisplay = document.getElementById('time-display');
+const progressBarCheckbox = document.getElementById('progress-bar-toggle');
+const progressBar = document.getElementById('progress-bar');
+const numbersCheckbox = document.getElementById('numbers-toggle');
+const markers = document.getElementById('markers');
+const hourNumbersCheckbox = document.getElementById('hour-numbers-toggle');
 
 settingsButton.addEventListener('click', () => {
     settingsPanel.classList.toggle('visible');
 });
 
-hourlyCheckbox.checked = hourlyDing;
-quarterCheckbox.checked = quarterDing;
+// Close settings panel when clicking outside of it
+document.addEventListener('click', (event) => {
+    if (settingsPanel.classList.contains('visible') && 
+        !settingsPanel.contains(event.target) && 
+        !settingsButton.contains(event.target)) {
+        settingsPanel.classList.remove('visible');
+    }
+});
+
+hourlyCheckbox.checked = hourSound;
+quarterCheckbox.checked = quarterSound;
+minuteCheckbox.checked = minuteSound;
+tickTockCheckbox.checked = secondTickTock;
 volumeControl.value = volume;
 hourBarCheckbox.checked = showHourBar;
 digitalClockCheckbox.checked = showDigitalClock;
+progressBarCheckbox.checked = showProgressBar;
+numbersCheckbox.checked = showNumbers;
+hourNumbersCheckbox.checked = showHourNumbers;
 updateHourBarVisibility();
 updateDigitalClockVisibility();
+updateProgressBarVisibility();
+updateNumbersVisibility();
+updateHourNumbersVisibility();
 
 hourlyCheckbox.addEventListener('change', () => {
-    hourlyDing = hourlyCheckbox.checked;
-    localStorage.setItem('hourlyDing', hourlyDing);
+    hourSound = hourlyCheckbox.checked;
+    localStorage.setItem('hourSound', hourSound);
 });
 
 quarterCheckbox.addEventListener('change', () => {
-    quarterDing = quarterCheckbox.checked;
-    localStorage.setItem('quarterDing', quarterDing);
+    quarterSound = quarterCheckbox.checked;
+    localStorage.setItem('quarterSound', quarterSound);
+});
+
+minuteCheckbox.addEventListener('change', () => {
+    minuteSound = minuteCheckbox.checked;
+    localStorage.setItem('minuteSound', minuteSound);
+});
+
+tickTockCheckbox.addEventListener('change', () => {
+    secondTickTock = tickTockCheckbox.checked;
+    localStorage.setItem('secondTickTock', secondTickTock);
 });
 
 volumeControl.addEventListener('input', () => {
@@ -66,15 +120,158 @@ digitalClockCheckbox.addEventListener('change', () => {
     updateDigitalClockVisibility();
 });
 
+progressBarCheckbox.addEventListener('change', () => {
+    showProgressBar = progressBarCheckbox.checked;
+    localStorage.setItem('showProgressBar', showProgressBar);
+    updateProgressBarVisibility();
+});
+
+numbersCheckbox.addEventListener('change', () => {
+    showNumbers = numbersCheckbox.checked;
+    localStorage.setItem('showNumbers', showNumbers);
+    updateNumbersVisibility();
+});
+
+hourNumbersCheckbox.addEventListener('change', () => {
+    showHourNumbers = hourNumbersCheckbox.checked;
+    localStorage.setItem('showHourNumbers', showHourNumbers);
+    updateHourNumbersVisibility();
+});
+
 document.getElementById('test-hourly').addEventListener('click', playHourlyChirp);
 document.getElementById('test-quarter').addEventListener('click', playQuarterChirp);
+document.getElementById('test-minute').addEventListener('click', playMinuteChirp);
+document.getElementById('test-tick-tock').addEventListener('click', playTickTock);
 
 function playHourlyChirp() {
-    synth.triggerAttackRelease('C4', 1);
+    // Create a 3-note melody using FatOscillator as per documentation
+    const lowTone = new Tone.FatOscillator("E3", "triangle", 40);
+    const midTone = new Tone.FatOscillator("F3", "triangle", 60);
+    const highTone = new Tone.FatOscillator("G3", "sine", 30);
+    
+    const envelope = new Tone.AmplitudeEnvelope({
+        attack: 0.8,
+        decay: 0.3,
+        sustain: 0.7,
+        release: 7.4
+    }).connect(gainNode);
+    
+    lowTone.connect(envelope);
+    midTone.connect(envelope);
+    highTone.connect(envelope);
+    
+    // Play 3-note melody: C-E-G
+    lowTone.start();
+    envelope.triggerAttackRelease(1.0);
+    
+    // Second note (E) after 1.2 second gap
+    setTimeout(() => {
+        midTone.start();
+        envelope.triggerAttackRelease(1.0);
+    }, 1200);
+    
+    // Third note (G) after 1.2 second gap
+    setTimeout(() => {
+        highTone.start();
+        envelope.triggerAttackRelease(1.0);
+    }, 2400);
+    
+    // Clean up oscillators after they finish
+    setTimeout(() => {
+        lowTone.dispose();
+        midTone.dispose();
+        highTone.dispose();
+        envelope.dispose();
+    }, 8000);
 }
 
 function playQuarterChirp() {
-    synth.triggerAttackRelease('G4', 0.3);
+    // Create a 2-note descending melody for 15-minute sound
+    const highTone = new Tone.FatOscillator("G3", "triangle", 40);
+    const lowTone = new Tone.FatOscillator("E3", "triangle", 40);
+    
+    const envelope = new Tone.AmplitudeEnvelope({
+        attack: 0.4,
+        decay: 0.3,
+        sustain: 0.7,
+        release: 0.4
+    }).connect(gainNode);
+    
+    highTone.connect(envelope);
+    lowTone.connect(envelope);
+    
+    // Play 2-note descending melody: G-E
+    highTone.start();
+    envelope.triggerAttackRelease(0.4);
+    
+    // Second note (E) after 1.2 second gap
+    setTimeout(() => {
+        lowTone.start();
+        envelope.triggerAttackRelease(0.6);
+    }, 900);
+    
+    // Clean up oscillators after they finish
+    setTimeout(() => {
+        highTone.dispose();
+        lowTone.dispose();
+        envelope.dispose();
+    }, 2000);
+}
+
+function playMinuteChirp() {
+    // Create a double chirp for minute sound, similar to tick-tock
+    const chirp = new Tone.Synth({
+        oscillator: {
+            type: "sine"
+        },
+        envelope: {
+            attack: 0.01,
+            decay: 0.02,
+            sustain: 0,
+            release: 0.1
+        }
+    }).connect(gainNode);
+    
+    // First chirp
+    chirp.triggerAttackRelease("E4", "8n");
+    
+    // Second chirp after short delay
+    setTimeout(() => {
+        chirp.triggerAttackRelease("E4", "8n");
+    }, 200);
+}
+
+function playTickTock() {
+    if (isTick) {
+        // Tick sound - higher pitch, short click
+        const click = new Tone.Synth({
+            oscillator: {
+                type: "sine"
+            },
+            envelope: {
+                attack: 0.01,
+                decay: 0.02,
+                sustain: 0,
+                release: 0.105
+            }
+        }).connect(gainNode);
+        click.triggerAttackRelease("C4", "8n");
+    } else {
+        // Tock sound - lower pitch, short click
+        const click = new Tone.Synth({
+            oscillator: {
+                type: "sine"
+            },
+            envelope: {
+                attack: 0.01,
+                decay: 0.02,
+                sustain: 0,
+                release: 0.105
+            }
+        }).connect(gainNode);
+        click.triggerAttackRelease("C3", "8n");
+    }
+    isTick = !isTick; // Alternate between tick and tock
 }
 
 function updateProgress() {
@@ -93,14 +290,23 @@ function updateProgress() {
     const timeString = now.toLocaleTimeString('en-US', { hour12: false });
     document.getElementById('time-display').textContent = timeString;
 
-    if (hourlyDing && minutes === 0 && seconds === 0 && hours !== lastHourPlayed) {
+    if (hourSound && minutes === 0 && seconds === 0 && hours !== lastHourPlayed) {
         playHourlyChirp();
         lastHourPlayed = hours;
     }
     const quarter = Math.floor(minutes / 15);
-    if (quarterDing && minutes % 15 === 0 && seconds === 0 && quarter !== lastQuarterPlayed) {
+    if (quarterSound && minutes % 15 === 0 && seconds === 0 && quarter !== lastQuarterPlayed) {
         playQuarterChirp();
         lastQuarterPlayed = quarter;
+    }
+    if (minuteSound && seconds === 0 && minutes !== lastMinutePlayed) {
+        playMinuteChirp();
+        lastMinutePlayed = minutes;
+    }
+    
+    // Tick tock every second
+    if (secondTickTock) {
+        playTickTock();
     }
 }
 
@@ -146,8 +352,9 @@ function createHourMarkers() {
         }
         marker.style.left = (i / 60) * 100 + '%';
 
-        if (i % 15 === 0) {
+        if (i % 15 === 0 || i === 5 || i === 10 || i === 20 || i === 25 || i === 35 || i === 40 || i === 50 || i === 55) {
             const label = document.createElement('div');
+            label.classList.add('marker-label');
             label.textContent = i;
             marker.appendChild(label);
         }
@@ -163,10 +370,62 @@ function createHourMarkers() {
 function updateHourBarVisibility() {
     hourProgressBar.style.display = showHourBar ? 'block' : 'none';
     hourMarkers.style.display = showHourBar ? 'block' : 'none';
+    
+    if (!showHourBar) {
+        // If hour bar is hidden, also hide the hour marker numbers
+        showHourNumbers = false;
+        hourNumbersCheckbox.checked = false;
+        localStorage.setItem('showHourNumbers', false);
+        updateHourNumbersVisibility();
+    } else {
+        // If hour bar is shown, also show the hour marker numbers
+        showHourNumbers = true;
+        hourNumbersCheckbox.checked = true;
+        localStorage.setItem('showHourNumbers', true);
+        updateHourNumbersVisibility();
+    }
 }
 
 function updateDigitalClockVisibility() {
     timeDisplay.style.display = showDigitalClock ? 'block' : 'none';
+}
+
+function updateProgressBarVisibility() {
+    progressBar.style.display = showProgressBar ? 'block' : 'none';
+    
+    if (!showProgressBar) {
+        // If progress bar is hidden, also hide the marker numbers and lines
+        showNumbers = false;
+        numbersCheckbox.checked = false;
+        localStorage.setItem('showNumbers', false);
+        updateNumbersVisibility();
+        
+        // Also hide the entire markers container (numbers + lines)
+        markers.style.display = 'none';
+    } else {
+        // If progress bar is shown, show the markers container and numbers
+        markers.style.display = 'block';
+        showNumbers = true;
+        numbersCheckbox.checked = true;
+        localStorage.setItem('showNumbers', true);
+        updateNumbersVisibility();
+    }
+}
+
+function updateNumbersVisibility() {
+    // Hide/show only the number labels, keep the lines visible
+    const labels = markers.querySelectorAll('.marker-label');
+    labels.forEach(label => {
+        label.style.display = showNumbers ? 'block' : 'none';
+    });
+}
+
+function updateHourNumbersVisibility() {
+    // Hide/show only the hour marker number labels, keep the lines visible
+    const hourLabels = hourMarkers.querySelectorAll('.marker-label');
+    hourLabels.forEach(label => {
+        label.style.display = showHourNumbers ? 'block' : 'none';
+    });
 }
 
 createMarkers();

@@ -1,5 +1,5 @@
 body {
-    background-color: #333;
+    background-color: #151515;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -29,6 +29,7 @@ body {
     padding: 10px;
     display: none;
     font-size: 0.9em;
+    z-index: 1000;
 }
 
 #settings-panel.visible {
@@ -43,8 +44,8 @@ body {
 }
 
 .container {
-    width: 80%;
-    height: 50vh; /* half the page height */
+    width: 85%;
+    height: 55vh; /* half the page height */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -55,6 +56,7 @@ body {
     height: 20%;
     margin-bottom: 5px;
     position: relative;
+    border-radius: 6px;
 }
 
 #hour-markers {
@@ -69,6 +71,7 @@ body {
     background-color: #999;
     height: 100%;
     width: 0%;
+    border-radius: 6px;
 }
 
 
@@ -76,12 +79,14 @@ body {
     background-color: #444;
     height: 50%;
     position: relative;
+    border-radius: 6px;
 }
 
 #progress {
     background-color: #ccc;
     height: 100%;
     width: 0%;
+    border-radius: 6px;
 }
 
 #markers {
@@ -95,7 +100,7 @@ body {
 #time-display {
     text-align: center;
     margin-bottom: 60px;
-    font-size: 1.2em;
+    font-size: 1.7em;
 }
 
 .marker {
@@ -111,11 +116,13 @@ body {
 .marker-line {
     width: 1px;
     background: #fff;
+    border-radius: 1px;
 }
 
 .marker-large .marker-line {
     height: 20px;
     width: 2px;
+    border-radius: 1px;
 }
 
 .marker-small .marker-line {
@@ -140,8 +147,17 @@ body {
     bottom: 0;
 }
 #hour-markers .marker-label {
-    margin-bottom: 2px;
+    margin-bottom: 0px;
     margin-top: 0;
+}
+#hour-markers .marker-large .marker-label {
+    font-size: 1.4em;
+    font-weight: bold;
+}
+#hour-markers .marker-large .marker-line {
+    height: 30px;
+    width: 2px;
+    border-radius: 1px;
 }
 
 
@@ -152,9 +168,11 @@ body {
 
 
 .marker-start {
-    transform: none;
+    left: 0;
+    transform: translateX(-50%);
 }
 
 .marker-end {
-    transform: translateX(-100%);
+    left: 100%;
+    transform: translateX(-50%);
 }
