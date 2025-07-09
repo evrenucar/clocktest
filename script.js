@@ -105,11 +105,12 @@ function createMarkers() {
             marker.classList.add('marker-small');
         }
         if (i === 0) {
-            marker.classList.add("marker-start");
+            marker.classList.add('marker-start');
         } else if (i === 24) {
-            marker.classList.add("marker-end");
+            marker.classList.add('marker-end');
         }
         marker.style.left = (i / 24) * 100 + '%';
+
 
         const line = document.createElement('div');
         line.classList.add('marker-line');

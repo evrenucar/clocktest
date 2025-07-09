@@ -111,6 +111,7 @@ body {
 .marker-small .marker-line {
     height: 10px;
 }
+
 .marker-label {
     margin-top: 2px;
 }
@@ -119,6 +120,7 @@ body {
     font-size: 2em;
     font-weight: bold;
 }
+
 
 .marker-start {
     transform: none;
