@@ -67,6 +67,14 @@ body {
 }
 
 .marker-large label {
-    font-size: 1.1em;
+    font-size: 2em;
     font-weight: bold;
+}
+
+.marker-start {
+    transform: none;
+}
+
+.marker-end {
+    transform: translateX(-100%);
 }
