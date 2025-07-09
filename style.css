@@ -30,8 +30,9 @@ body {
 }
 
 #markers {
-    display: flex;
-    justify-content: space-between;
+    position: relative;
+    width: 100%;
+    height: 30px;
     margin-top: 10px;
     font-size: 12px;
 }
@@ -43,6 +44,9 @@ body {
 }
 
 .marker {
+    position: absolute;
+    bottom: 0;
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     align-items: center;
