@@ -55,8 +55,6 @@ body {
     height: 20%;
     margin-bottom: 5px;
     position: relative;
-}
-
 #hour-markers {
     position: absolute;
     top: -25px;
@@ -70,6 +68,7 @@ body {
     height: 100%;
     width: 0%;
 }
+
 
 #progress-bar {
     background-color: #444;
@@ -99,7 +98,7 @@ body {
 
 .marker {
     position: absolute;
-    bottom: 0;
+    top: 0;
     transform: translateX(-50%);
     display: flex;
     flex-direction: column;
@@ -120,7 +119,20 @@ body {
     height: 10px;
 }
 
-.marker-large label {
-    font-size: 1.1em;
+.marker-label {
+    margin-top: 2px;
+}
+
+.marker-large .marker-label {
+    font-size: 2em;
     font-weight: bold;
+}
+
+
+.marker-start {
+    transform: none;
+}
+
+.marker-end {
+    transform: translateX(-100%);
 }

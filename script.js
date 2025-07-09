@@ -1,8 +1,11 @@
 let hourlyDing = localStorage.getItem('hourlyDing') === 'true';
 let quarterDing = localStorage.getItem('quarterDing') === 'true';
-let volume = parseFloat(localStorage.getItem('volume')) || 0.5;
+let volume = parseFloat(localStorage.getItem('volume'));
+if (isNaN(volume)) volume = 0.5;
+
 let showHourBar = localStorage.getItem('showHourBar');
 showHourBar = showHourBar === null ? true : showHourBar === 'true';
+
 let lastHourPlayed = null;
 let lastQuarterPlayed = null;
 
@@ -35,15 +38,15 @@ quarterCheckbox.addEventListener('change', () => {
     localStorage.setItem('quarterDing', quarterDing);
 });
 
+volumeControl.addEventListener('input', () => {
+    volume = parseFloat(volumeControl.value);
+    localStorage.setItem('volume', volume);
+});
+
 hourBarCheckbox.addEventListener('change', () => {
     showHourBar = hourBarCheckbox.checked;
     localStorage.setItem('showHourBar', showHourBar);
     updateHourBarVisibility();
-});
-
-volumeControl.addEventListener('input', () => {
-    volume = parseFloat(volumeControl.value);
-    localStorage.setItem('volume', volume);
 });
 
 document.getElementById('test-hourly').addEventListener('click', playHourlyChirp);
@@ -100,13 +103,18 @@ function updateProgress() {
 
 function createMarkers() {
     const markersContainer = document.getElementById('markers');
-    for (let i = 1; i <= 24; i++) {
+    for (let i = 0; i <= 24; i++) {
         const marker = document.createElement('div');
         marker.classList.add('marker');
         if (i % 3 === 0) {
             marker.classList.add('marker-large');
         } else {
             marker.classList.add('marker-small');
+        }
+        if (i === 0) {
+            marker.classList.add('marker-start');
+        } else if (i === 24) {
+            marker.classList.add('marker-end');
         }
         marker.style.left = (i / 24) * 100 + '%';
 
@@ -115,6 +123,7 @@ function createMarkers() {
         marker.appendChild(line);
 
         const label = document.createElement('div');
+        label.classList.add('marker-label');
         label.textContent = i;
         marker.appendChild(label);
 
