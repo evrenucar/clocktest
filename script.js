@@ -28,12 +28,16 @@ let isTick = true; // true for tick, false for tock
 // Initialize audio context on first user interaction
 let audioInitialized = false;
 const gainNode = new Tone.Gain(volume).toDestination();
-const synth = new Tone.Synth({
+// Single synth used for the tick/tock sound so we don't create a new
+// instance every second. Constantly creating synthesizers can cause
+// memory buildup and audio stuttering after long periods of time.
+const tickSynth = new Tone.Synth({
+    oscillator: { type: "sine" },
     envelope: {
         attack: 0.01,
-        decay: 0.1,
-        sustain: 0.3,
-        release: 0.5
+        decay: 0.02,
+        sustain: 0,
+        release: 0.105
     }
 }).connect(gainNode);
 
@@ -274,35 +278,10 @@ function playMinuteChirp() {
 }
 
 function playTickTock() {
-    if (isTick) {
-        // Tick sound - higher pitch, short click
-        const click = new Tone.Synth({
-            oscillator: {
-                type: "sine"
-            },
-            envelope: {
-                attack: 0.01,
-                decay: 0.02,
-                sustain: 0,
-                release: 0.105
-            }
-        }).connect(gainNode);
-        click.triggerAttackRelease("C4", "8n");
-    } else {
-        // Tock sound - lower pitch, short click
-        const click = new Tone.Synth({
-            oscillator: {
-                type: "sine"
-            },
-            envelope: {
-                attack: 0.01,
-                decay: 0.02,
-                sustain: 0,
-                release: 0.105
-            }
-        }).connect(gainNode);
-        click.triggerAttackRelease("C3", "8n");
-    }
+    // Reuse the same synth instance and simply change the note. This
+    // avoids allocating new Tone.Synth objects every second.
+    const note = isTick ? "C4" : "C3";
+    tickSynth.triggerAttackRelease(note, "8n");
     isTick = !isTick; // Alternate between tick and tock
 }
 
