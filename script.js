@@ -44,6 +44,16 @@ function initializeAudio() {
     }
 }
 
+// Resume the audio context on the first user gesture
+function handleFirstGesture() {
+    initializeAudio();
+    document.removeEventListener('touchstart', handleFirstGesture);
+    document.removeEventListener('click', handleFirstGesture);
+}
+
+document.addEventListener('touchstart', handleFirstGesture, { once: true });
+document.addEventListener('click', handleFirstGesture, { once: true });
+
 const settingsButton = document.getElementById('settings-button');
 const settingsPanel = document.getElementById('settings-panel');
 const hourlyCheckbox = document.getElementById('hourly-ding');
