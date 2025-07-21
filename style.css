@@ -1,12 +1,33 @@
+:root {
+    --background-color: #151515;
+    --text-color: #fff;
+    --settings-button-color: #fff;
+    --settings-panel-bg: rgba(0, 0, 0, 0.8);
+    --hour-progress-bar-bg: #555;
+    --progress-bar-bg: #444;
+    --progress-color: #ffeb3b;
+    --marker-line-color: #fff;
+}
+
 body {
-    background-color: #151515;
+    background-color: var(--background-color);
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    color: #fff;
+    color: var(--text-color);
     font-family: Arial, sans-serif;
     margin: 0;
+}
+
+body.light-mode {
+    --background-color: #f0f0f0;
+    --text-color: #000;
+    --settings-button-color: #000;
+    --settings-panel-bg: rgba(255, 255, 255, 0.8);
+    --hour-progress-bar-bg: #bbb;
+    --progress-bar-bg: #ccc;
+    --marker-line-color: #000;
 }
 
 #settings-button {
@@ -15,7 +36,7 @@ body {
     right: 10px;
     background: none;
     border: none;
-    color: #fff;
+    color: var(--settings-button-color);
     opacity: 0.3;
     font-size: 1.5em;
     cursor: pointer;
@@ -25,7 +46,7 @@ body {
     position: absolute;
     top: 40px;
     right: 10px;
-    background: rgba(0, 0, 0, 0.8);
+    background: var(--settings-panel-bg);
     padding: 10px;
     display: none;
     font-size: 0.9em;
@@ -52,7 +73,7 @@ body {
 }
 
 #hour-progress-bar {
-    background-color: #555;
+    background-color: var(--hour-progress-bar-bg);
     height: 20%;
     margin-bottom: 5px;
     position: relative;
@@ -68,7 +89,7 @@ body {
 }
 
 #hour-progress {
-    background-color: #999;
+    background-color: var(--progress-color);
     height: 100%;
     width: 0%;
     border-radius: 6px;
@@ -76,14 +97,14 @@ body {
 
 
 #progress-bar {
-    background-color: #444;
+    background-color: var(--progress-bar-bg);
     height: 50%;
     position: relative;
     border-radius: 6px;
 }
 
 #progress {
-    background-color: #ccc;
+    background-color: var(--progress-color);
     height: 100%;
     width: 0%;
     border-radius: 6px;
@@ -115,7 +136,7 @@ body {
 
 .marker-line {
     width: 1px;
-    background: #fff;
+    background: var(--marker-line-color);
     border-radius: 1px;
 }
 

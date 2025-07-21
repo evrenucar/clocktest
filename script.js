@@ -20,6 +20,8 @@ showNumbers = showNumbers === null ? true : showNumbers === 'true';
 let showHourNumbers = localStorage.getItem('showHourNumbers');
 showHourNumbers = showHourNumbers === null ? true : showHourNumbers === 'true';
 
+let lightMode = localStorage.getItem('lightMode') === 'true';
+
 let lastHourPlayed = null;
 let lastQuarterPlayed = null;
 let lastMinutePlayed = null;
@@ -75,6 +77,7 @@ const progressBar = document.getElementById('progress-bar');
 const numbersCheckbox = document.getElementById('numbers-toggle');
 const markers = document.getElementById('markers');
 const hourNumbersCheckbox = document.getElementById('hour-numbers-toggle');
+const themeToggle = document.getElementById('theme-toggle');
 
 settingsButton.addEventListener('click', () => {
     initializeAudio();
@@ -100,6 +103,8 @@ digitalClockCheckbox.checked = showDigitalClock;
 progressBarCheckbox.checked = showProgressBar;
 numbersCheckbox.checked = showNumbers;
 hourNumbersCheckbox.checked = showHourNumbers;
+themeToggle.checked = lightMode;
+applyTheme();
 updateHourBarVisibility();
 updateDigitalClockVisibility();
 updateProgressBarVisibility();
@@ -160,6 +165,12 @@ hourNumbersCheckbox.addEventListener('change', () => {
     showHourNumbers = hourNumbersCheckbox.checked;
     localStorage.setItem('showHourNumbers', showHourNumbers);
     updateHourNumbersVisibility();
+});
+
+themeToggle.addEventListener('change', () => {
+    lightMode = themeToggle.checked;
+    localStorage.setItem('lightMode', lightMode);
+    applyTheme();
 });
 
 document.getElementById('test-hourly').addEventListener('click', () => {
@@ -437,6 +448,14 @@ function updateHourNumbersVisibility() {
     hourLabels.forEach(label => {
         label.style.display = showHourNumbers ? 'block' : 'none';
     });
+}
+
+function applyTheme() {
+    if (lightMode) {
+        document.body.classList.add('light-mode');
+    } else {
+        document.body.classList.remove('light-mode');
+    }
 }
 
 createMarkers();
