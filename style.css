@@ -5,8 +5,10 @@
     --settings-panel-bg: rgba(0, 0, 0, 0.8);
     --hour-progress-bar-bg: #555;
     --progress-bar-bg: #444;
-    --progress-color: #ffeb3b;
+    --progress-color: #999;
+    --progress-hue: 60;
     --marker-line-color: #fff;
+    --night-filter: 0;
 }
 
 body {
@@ -18,6 +20,20 @@ body {
     color: var(--text-color);
     font-family: Arial, sans-serif;
     margin: 0;
+    position: relative;
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: rgba(255, 200, 0, calc(var(--night-filter) * 0.4));
+    mix-blend-mode: multiply;
+    z-index: 999;
 }
 
 body.light-mode {
@@ -28,6 +44,7 @@ body.light-mode {
     --hour-progress-bar-bg: #bbb;
     --progress-bar-bg: #ccc;
     --marker-line-color: #000;
+    --progress-color: hsl(var(--progress-hue), 90%, 50%);
 }
 
 #settings-button {
@@ -62,6 +79,14 @@ body.light-mode {
     display: flex;
     align-items: center;
     gap: 5px;
+}
+
+#color-slider-row {
+    display: none;
+}
+
+body.light-mode #color-slider-row {
+    display: flex;
 }
 
 .container {
