@@ -2,12 +2,23 @@
 
 Public version can be accessed at https://evrenucar.github.io/clocktest/
 
-This is a simple web app that displays a 24-hour clock as a loading bar. The bar fills from left to right over the course of a day. A live digital clock is shown above the bar. Each hour is marked below the bar from 0 through 24. The marks (and numbers) at 0, 3, 6, 9, 12, 15, 18, 21 and 24 are twice the size for better readability and the 0/24 markers sit flush with the edges.
+This is a simple web app that displays a 24-hour clock as a loading bar. The bar fills from left to right over the course of a day. 
+Unlike a regular clock a progress-bar helps visualize passage of time and how much time is left in the day.
 
-![image](https://github.com/user-attachments/assets/be4ce319-0110-4c43-afb2-aa8115c484a5)
+<img width="1824" height="844" alt="image" src="https://github.com/user-attachments/assets/3a315a70-2936-4a7c-baf7-ffc261ab70e5" />
+
+Sound help to recognize and perceive passage of time better. Sound to be played can be selected and volume adjusted
+<img width="224" height="161" alt="image" src="https://github.com/user-attachments/assets/e7afdc6b-588e-4fbd-a4f3-7eefe93173de" />
+
+The hour-bar and day-bar(24hrs) numbers and the bars themselves can be turned on-off
+<img width="212" height="124" alt="image" src="https://github.com/user-attachments/assets/7f49e1e9-5107-4e60-8dff-73f5efd09f1a" />
+
+There is a dark mode(default) as well as a light mode. Light mode can be enabled by checking the box. Additionally the color can be adjusted.
+<img width="684" height="279" alt="image" src="https://github.com/user-attachments/assets/d3ae21be-5ef1-4808-8bb7-dc195b0315ab" />
+
+The night filter can be adjusted to pull whites closer to yellow for less eye-strain
+<img width="591" height="336" alt="image" src="https://github.com/user-attachments/assets/c4cb4e7b-2b65-44c5-b788-14d769ab54e4" />
 
 
-Open `index.html` in your browser to see the clock in action. To share it publicly, push the files to a GitHub repository and enable GitHub Pages for that repo.
+Open `index.html` in your browser to see the clock in action. If you have any issues please report it and I'll get it fixed. Cheers!
 
-
-![image](https://github.com/user-attachments/assets/e67deaa3-b190-4caf-81cf-2f5a62b70277)
