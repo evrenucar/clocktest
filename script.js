@@ -20,6 +20,12 @@ showNumbers = showNumbers === null ? true : showNumbers === 'true';
 let showHourNumbers = localStorage.getItem('showHourNumbers');
 showHourNumbers = showHourNumbers === null ? true : showHourNumbers === 'true';
 
+let lightMode = localStorage.getItem('lightMode') === 'true';
+let progressHue = parseInt(localStorage.getItem('progressHue'));
+if (isNaN(progressHue)) progressHue = 60;
+let nightFilter = parseFloat(localStorage.getItem('nightFilter'));
+if (isNaN(nightFilter)) nightFilter = 0;
+
 let lastHourPlayed = null;
 let lastQuarterPlayed = null;
 let lastMinutePlayed = null;
@@ -75,6 +81,10 @@ const progressBar = document.getElementById('progress-bar');
 const numbersCheckbox = document.getElementById('numbers-toggle');
 const markers = document.getElementById('markers');
 const hourNumbersCheckbox = document.getElementById('hour-numbers-toggle');
+const themeToggle = document.getElementById('theme-toggle');
+const colorSlider = document.getElementById('color-slider');
+const colorSliderRow = document.getElementById('color-slider-row');
+const nightFilterSlider = document.getElementById('night-filter-slider');
 
 settingsButton.addEventListener('click', () => {
     initializeAudio();
@@ -100,6 +110,10 @@ digitalClockCheckbox.checked = showDigitalClock;
 progressBarCheckbox.checked = showProgressBar;
 numbersCheckbox.checked = showNumbers;
 hourNumbersCheckbox.checked = showHourNumbers;
+themeToggle.checked = lightMode;
+colorSlider.value = progressHue;
+nightFilterSlider.value = nightFilter;
+applyTheme();
 updateHourBarVisibility();
 updateDigitalClockVisibility();
 updateProgressBarVisibility();
@@ -160,6 +174,24 @@ hourNumbersCheckbox.addEventListener('change', () => {
     showHourNumbers = hourNumbersCheckbox.checked;
     localStorage.setItem('showHourNumbers', showHourNumbers);
     updateHourNumbersVisibility();
+});
+
+themeToggle.addEventListener('change', () => {
+    lightMode = themeToggle.checked;
+    localStorage.setItem('lightMode', lightMode);
+    applyTheme();
+});
+
+colorSlider.addEventListener('input', () => {
+    progressHue = parseInt(colorSlider.value);
+    localStorage.setItem('progressHue', progressHue);
+    updateAccentColor();
+});
+
+nightFilterSlider.addEventListener('input', () => {
+    nightFilter = parseFloat(nightFilterSlider.value);
+    localStorage.setItem('nightFilter', nightFilter);
+    updateNightFilter();
 });
 
 document.getElementById('test-hourly').addEventListener('click', () => {
@@ -437,6 +469,30 @@ function updateHourNumbersVisibility() {
     hourLabels.forEach(label => {
         label.style.display = showHourNumbers ? 'block' : 'none';
     });
+}
+
+function updateAccentColor() {
+    if (lightMode) {
+        document.documentElement.style.setProperty('--progress-hue', progressHue);
+    }
+}
+
+function updateNightFilter() {
+    document.documentElement.style.setProperty('--night-filter', nightFilter);
+}
+
+function applyTheme() {
+    if (lightMode) {
+        document.body.classList.add('light-mode');
+        colorSliderRow.style.display = 'flex';
+        updateAccentColor();
+    } else {
+        document.body.classList.remove('light-mode');
+        colorSliderRow.style.display = 'none';
+        document.documentElement.style.removeProperty('--progress-hue');
+        document.documentElement.style.removeProperty('--progress-color');
+    }
+    updateNightFilter();
 }
 
 createMarkers();
