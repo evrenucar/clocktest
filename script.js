@@ -487,16 +487,6 @@ function updateAccentColor() {
     document.documentElement.style.setProperty('--progress-hue', progressHue);
     document.documentElement.style.setProperty('--progress-saturation', progressSaturation + '%');
     document.documentElement.style.setProperty('--progress-color', color);
-    colorSlider.style.accentColor = color;
-    colorSlider.style.background = `linear-gradient(to right,
-        hsl(0, ${progressSaturation}%, 50%),
-        hsl(60, ${progressSaturation}%, 50%),
-        hsl(120, ${progressSaturation}%, 50%),
-        hsl(180, ${progressSaturation}%, 50%),
-        hsl(240, ${progressSaturation}%, 50%),
-        hsl(300, ${progressSaturation}%, 50%),
-        hsl(360, ${progressSaturation}%, 50%)
-    )`;
 }
 
 function updateNightFilter() {

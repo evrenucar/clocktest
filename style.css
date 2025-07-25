@@ -93,7 +93,18 @@ body.light-mode {
 }
 
 #color-slider {
-    accent-color: hsl(var(--progress-hue), var(--progress-saturation), 50%);
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    background: transparent;
+    transition: none;
+    outline: none;
+}
+
+#color-slider::-webkit-slider-runnable-track,
+#color-slider::-moz-range-track {
+    height: 8px;
+    border-radius: 4px;
     background: linear-gradient(to right,
         hsl(0deg, var(--progress-saturation), 50%),
         hsl(60deg, var(--progress-saturation), 50%),
@@ -103,6 +114,13 @@ body.light-mode {
         hsl(300deg, var(--progress-saturation), 50%),
         hsl(360deg, var(--progress-saturation), 50%)
     );
+}
+
+#color-slider::-webkit-slider-thumb,
+#color-slider::-moz-range-thumb {
+    background: hsl(var(--progress-hue), var(--progress-saturation), 50%);
+    border: none;
+    transition: none;
 }
 
 .container {
