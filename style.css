@@ -7,6 +7,7 @@
     --progress-bar-bg: #444;
     --progress-color: #999;
     --progress-hue: 60;
+    --progress-saturation: 50%;
     --marker-line-color: #fff;
     --night-filter: 0;
 }
@@ -29,7 +30,7 @@ body, body * {
 }
 
 body::after {
-    transition: background-color 0.4s ease;
+    transition: background-color 0.4s ease-out;
     content: "";
     position: fixed;
     top: 0;
@@ -50,7 +51,7 @@ body.light-mode {
     --hour-progress-bar-bg: #bbb;
     --progress-bar-bg: #ccc;
     --marker-line-color: #000;
-    --progress-color: hsl(var(--progress-hue), 90%, 50%);
+    --progress-color: hsl(var(--progress-hue), var(--progress-saturation), 50%);
 }
 
 #settings-button {
@@ -87,11 +88,8 @@ body.light-mode {
     gap: 5px;
 }
 
-#color-slider-row {
-    display: none;
-}
-
-body.light-mode #color-slider-row {
+#color-slider-row,
+#saturation-slider-row {
     display: flex;
 }
 
@@ -140,8 +138,9 @@ body.light-mode #color-slider-row {
     width: 0%;
     border-radius: 6px;
 }
-#progress, #hour-progress {
-    transition: background-color 0.4s ease;
+#progress,
+#hour-progress {
+  transition: background-color 0.4s ease-out;
 }
 
 #markers {
