@@ -329,6 +329,9 @@ function playTickTock() {
 }
 
 function updateProgress() {
+    if ((secondTickTock || hourSound || quarterSound || minuteSound) && !audioInitialized) {
+        initializeAudio();
+    }
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
@@ -422,8 +425,8 @@ function createHourMarkers() {
 }
 
 function updateHourBarVisibility() {
-    hourProgressBar.style.display = showHourBar ? 'block' : 'none';
-    hourMarkers.style.display = showHourBar ? 'block' : 'none';
+    hourProgressBar.classList.toggle('hidden-toggle', !showHourBar);
+    hourMarkers.classList.toggle('hidden-toggle', !showHourBar);
     
     if (!showHourBar) {
         // If hour bar is hidden, also hide the hour marker numbers
@@ -441,11 +444,11 @@ function updateHourBarVisibility() {
 }
 
 function updateDigitalClockVisibility() {
-    timeDisplay.style.display = showDigitalClock ? 'block' : 'none';
+    timeDisplay.classList.toggle('hidden-toggle', !showDigitalClock);
 }
 
 function updateProgressBarVisibility() {
-    progressBar.style.display = showProgressBar ? 'block' : 'none';
+    progressBar.classList.toggle('hidden-toggle', !showProgressBar);
     
     if (!showProgressBar) {
         // If progress bar is hidden, also hide the marker numbers and lines
@@ -455,10 +458,10 @@ function updateProgressBarVisibility() {
         updateNumbersVisibility();
         
         // Also hide the entire markers container (numbers + lines)
-        markers.style.display = 'none';
+        markers.classList.add('hidden-toggle');
     } else {
         // If progress bar is shown, show the markers container and numbers
-        markers.style.display = 'block';
+        markers.classList.remove('hidden-toggle');
         showNumbers = true;
         numbersCheckbox.checked = true;
         localStorage.setItem('showNumbers', true);
@@ -505,5 +508,11 @@ function applyTheme() {
 
 createMarkers();
 createHourMarkers();
-updateProgress();
-setInterval(updateProgress, 1000); // update every second
+function scheduleUpdate() {
+    const now = new Date();
+    updateProgress();
+    const delay = 1000 - now.getMilliseconds();
+    setTimeout(scheduleUpdate, delay);
+}
+
+scheduleUpdate();
