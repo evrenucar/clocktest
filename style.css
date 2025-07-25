@@ -138,8 +138,9 @@ body.light-mode {
     width: 0%;
     border-radius: 6px;
 }
-#progress, #hour-progress {
-    transition: background-color 0.4s ease-out;
+#progress,
+#hour-progress {
+  transition: background-color 0.4s ease-out;
 }
 
 #markers {
