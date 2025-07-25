@@ -23,7 +23,13 @@ body {
     position: relative;
 }
 
+/* Ensure color changes between themes fade smoothly */
+body, body * {
+    transition: background-color 1.5s ease, color 1.5s ease, border-color 1.5s ease;
+}
+
 body::after {
+    transition: background 1.5s ease;
     content: "";
     position: fixed;
     top: 0;
