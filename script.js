@@ -23,6 +23,8 @@ showHourNumbers = showHourNumbers === null ? true : showHourNumbers === 'true';
 let lightMode = localStorage.getItem('lightMode') === 'true';
 let progressHue = parseInt(localStorage.getItem('progressHue'));
 if (isNaN(progressHue)) progressHue = 60;
+let progressSaturation = parseInt(localStorage.getItem('progressSaturation'));
+if (isNaN(progressSaturation)) progressSaturation = 50;
 let nightFilter = parseFloat(localStorage.getItem('nightFilter'));
 if (isNaN(nightFilter)) nightFilter = 0;
 
@@ -84,6 +86,8 @@ const hourNumbersCheckbox = document.getElementById('hour-numbers-toggle');
 const themeToggle = document.getElementById('theme-toggle');
 const colorSlider = document.getElementById('color-slider');
 const colorSliderRow = document.getElementById('color-slider-row');
+const saturationSlider = document.getElementById('saturation-slider');
+const saturationSliderRow = document.getElementById('saturation-slider-row');
 const nightFilterSlider = document.getElementById('night-filter-slider');
 
 settingsButton.addEventListener('click', () => {
@@ -112,6 +116,7 @@ numbersCheckbox.checked = showNumbers;
 hourNumbersCheckbox.checked = showHourNumbers;
 themeToggle.checked = lightMode;
 colorSlider.value = progressHue;
+saturationSlider.value = progressSaturation;
 nightFilterSlider.value = nightFilter;
 applyTheme();
 updateHourBarVisibility();
@@ -185,6 +190,12 @@ themeToggle.addEventListener('change', () => {
 colorSlider.addEventListener('input', () => {
     progressHue = parseInt(colorSlider.value);
     localStorage.setItem('progressHue', progressHue);
+    updateAccentColor();
+});
+
+saturationSlider.addEventListener('input', () => {
+    progressSaturation = parseInt(saturationSlider.value);
+    localStorage.setItem('progressSaturation', progressSaturation);
     updateAccentColor();
 });
 
@@ -474,6 +485,7 @@ function updateHourNumbersVisibility() {
 function updateAccentColor() {
     if (lightMode) {
         document.documentElement.style.setProperty('--progress-hue', progressHue);
+        document.documentElement.style.setProperty('--progress-saturation', progressSaturation + '%');
     }
 }
 
@@ -484,12 +496,11 @@ function updateNightFilter() {
 function applyTheme() {
     if (lightMode) {
         document.body.classList.add('light-mode');
-        colorSliderRow.style.display = 'flex';
         updateAccentColor();
     } else {
         document.body.classList.remove('light-mode');
-        colorSliderRow.style.display = 'none';
         document.documentElement.style.removeProperty('--progress-hue');
+        document.documentElement.style.removeProperty('--progress-saturation');
         document.documentElement.style.removeProperty('--progress-color');
     }
     updateNightFilter();
