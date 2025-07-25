@@ -483,10 +483,20 @@ function updateHourNumbersVisibility() {
 }
 
 function updateAccentColor() {
-    if (lightMode) {
-        document.documentElement.style.setProperty('--progress-hue', progressHue);
-        document.documentElement.style.setProperty('--progress-saturation', progressSaturation + '%');
-    }
+    const color = `hsl(${progressHue}, ${progressSaturation}%, 50%)`;
+    document.documentElement.style.setProperty('--progress-hue', progressHue);
+    document.documentElement.style.setProperty('--progress-saturation', progressSaturation + '%');
+    document.documentElement.style.setProperty('--progress-color', color);
+    colorSlider.style.accentColor = color;
+    colorSlider.style.background = `linear-gradient(to right,
+        hsl(0, ${progressSaturation}%, 50%),
+        hsl(60, ${progressSaturation}%, 50%),
+        hsl(120, ${progressSaturation}%, 50%),
+        hsl(180, ${progressSaturation}%, 50%),
+        hsl(240, ${progressSaturation}%, 50%),
+        hsl(300, ${progressSaturation}%, 50%),
+        hsl(360, ${progressSaturation}%, 50%)
+    )`;
 }
 
 function updateNightFilter() {
@@ -496,13 +506,10 @@ function updateNightFilter() {
 function applyTheme() {
     if (lightMode) {
         document.body.classList.add('light-mode');
-        updateAccentColor();
     } else {
         document.body.classList.remove('light-mode');
-        document.documentElement.style.removeProperty('--progress-hue');
-        document.documentElement.style.removeProperty('--progress-saturation');
-        document.documentElement.style.removeProperty('--progress-color');
     }
+    updateAccentColor();
     updateNightFilter();
 }
 

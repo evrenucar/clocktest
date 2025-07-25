@@ -5,7 +5,7 @@
     --settings-panel-bg: rgba(0, 0, 0, 0.8);
     --hour-progress-bar-bg: #555;
     --progress-bar-bg: #444;
-    --progress-color: #999;
+    --progress-color: hsl(var(--progress-hue), var(--progress-saturation), 50%);
     --progress-hue: 60;
     --progress-saturation: 50%;
     --marker-line-color: #fff;
@@ -51,7 +51,6 @@ body.light-mode {
     --hour-progress-bar-bg: #bbb;
     --progress-bar-bg: #ccc;
     --marker-line-color: #000;
-    --progress-color: hsl(var(--progress-hue), var(--progress-saturation), 50%);
 }
 
 #settings-button {
@@ -91,6 +90,19 @@ body.light-mode {
 #color-slider-row,
 #saturation-slider-row {
     display: flex;
+}
+
+#color-slider {
+    accent-color: hsl(var(--progress-hue), var(--progress-saturation), 50%);
+    background: linear-gradient(to right,
+        hsl(0deg, var(--progress-saturation), 50%),
+        hsl(60deg, var(--progress-saturation), 50%),
+        hsl(120deg, var(--progress-saturation), 50%),
+        hsl(180deg, var(--progress-saturation), 50%),
+        hsl(240deg, var(--progress-saturation), 50%),
+        hsl(300deg, var(--progress-saturation), 50%),
+        hsl(360deg, var(--progress-saturation), 50%)
+    );
 }
 
 .container {
