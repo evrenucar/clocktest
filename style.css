@@ -103,6 +103,14 @@ body.light-mode {
         hsl(300deg, var(--progress-saturation), 50%),
         hsl(360deg, var(--progress-saturation), 50%)
     );
+    transition: none;
+}
+
+#color-slider::-webkit-slider-thumb,
+#color-slider::-moz-range-thumb {
+    background: hsl(var(--progress-hue), var(--progress-saturation), 50%);
+    border: none;
+    transition: none;
 }
 
 .container {
