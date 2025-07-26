@@ -50,9 +50,13 @@ const tickSynth = new Tone.Synth({
 }).connect(gainNode);
 
 function initializeAudio() {
-    if (!audioInitialized) {
-        // Resume the Tone.js context when needed
-        Tone.start();
+    if (audioInitialized) return;
+
+    if (Tone.context.state !== 'running') {
+        Tone.start().then(() => {
+            audioInitialized = true;
+        });
+    } else {
         audioInitialized = true;
     }
 }
@@ -334,10 +338,13 @@ function updateProgress() {
         // Ensure the audio context is ready before any sound plays
         initializeAudio();
     }
+
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
     const seconds = now.getSeconds();
+}
+
 
     const totalSeconds = hours * 3600 + minutes * 60 + seconds;
     const progressPercent = (totalSeconds / 86400) * 100;
