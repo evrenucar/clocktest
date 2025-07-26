@@ -50,8 +50,7 @@ const tickSynth = new Tone.Synth({
 }).connect(gainNode);
 
 function initializeAudio() {
-    if (audioInitialized) return;
-
+    // Start the Tone.js context only if it isn't already running
     if (Tone.context.state !== 'running') {
         Tone.start().then(() => {
             audioInitialized = true;
@@ -334,17 +333,10 @@ function playTickTock() {
 }
 
 function updateProgress() {
-    if ((secondTickTock || hourSound || quarterSound || minuteSound) && !audioInitialized) {
-        // Ensure the audio context is ready before any sound plays
-        initializeAudio();
-    }
-
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
     const seconds = now.getSeconds();
-}
-
 
     const totalSeconds = hours * 3600 + minutes * 60 + seconds;
     const progressPercent = (totalSeconds / 86400) * 100;
