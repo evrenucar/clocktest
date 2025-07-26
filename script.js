@@ -51,6 +51,7 @@ const tickSynth = new Tone.Synth({
 
 function initializeAudio() {
     if (!audioInitialized) {
+        // Resume the Tone.js context when needed
         Tone.start();
         audioInitialized = true;
     }
@@ -330,6 +331,7 @@ function playTickTock() {
 
 function updateProgress() {
     if ((secondTickTock || hourSound || quarterSound || minuteSound) && !audioInitialized) {
+        // Ensure the audio context is ready before any sound plays
         initializeAudio();
     }
     const now = new Date();
