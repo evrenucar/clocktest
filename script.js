@@ -333,6 +333,9 @@ function playTickTock() {
 }
 
 function updateProgress() {
+    if ((secondTickTock || hourSound || quarterSound || minuteSound) && !audioInitialized) {
+        initializeAudio();
+    }
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
