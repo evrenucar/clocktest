@@ -160,7 +160,7 @@ body.light-mode {
 
 .container {
     width: 85%;
-    height: 55vh; /* half the page height */
+    height: 50vh; /* half the page height */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -221,6 +221,7 @@ body.light-mode {
     margin-bottom: 40px;
     font-size: 1.7em;
 }
+
 
 .marker {
     position: absolute;
