@@ -333,6 +333,9 @@ function playTickTock() {
 }
 
 function updateProgress() {
+    if ((secondTickTock || hourSound || quarterSound || minuteSound) && !audioInitialized) {
+        initializeAudio();
+    }
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
@@ -510,10 +513,12 @@ function applyTheme() {
 createMarkers();
 createHourMarkers();
 function scheduleUpdate() {
-    const now = new Date();
     updateProgress();
-    const delay = 1000 - now.getMilliseconds();
-    setTimeout(scheduleUpdate, delay);
 }
 
-scheduleUpdate();
+const now = new Date();
+const initialDelay = 1000 - now.getMilliseconds();
+setTimeout(() => {
+    scheduleUpdate();
+    setInterval(scheduleUpdate, 1000);
+}, initialDelay);
