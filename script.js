@@ -50,8 +50,12 @@ const tickSynth = new Tone.Synth({
 }).connect(gainNode);
 
 function initializeAudio() {
-    if (!audioInitialized) {
-        Tone.start();
+    // Start the Tone.js context only if it isn't already running
+    if (Tone.context.state !== 'running') {
+        Tone.start().then(() => {
+            audioInitialized = true;
+        });
+    } else {
         audioInitialized = true;
     }
 }
@@ -329,9 +333,6 @@ function playTickTock() {
 }
 
 function updateProgress() {
-    if ((secondTickTock || hourSound || quarterSound || minuteSound) && !audioInitialized) {
-        initializeAudio();
-    }
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
