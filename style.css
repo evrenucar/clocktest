@@ -114,11 +114,6 @@ body.light-mode {
     gap: 5px;
 }
 
-#color-slider-row,
-#saturation-slider-row {
-    display: flex;
-}
-
 #color-slider {
     appearance: none;
     -webkit-appearance: none;
@@ -151,16 +146,9 @@ body.light-mode {
     transition: none;
 }
 
-#color-slider::-webkit-slider-thumb,
-#color-slider::-moz-range-thumb {
-    background: hsl(var(--progress-hue), var(--progress-saturation), 50%);
-    border: none;
-    transition: none;
-}
-
 .container {
     width: 85%;
-    height: 50vh; /* half the page height */
+    height: 50vh; /* half the viewport height */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -205,7 +193,7 @@ body.light-mode {
 }
 #progress,
 #hour-progress {
-  transition: background-color 0.4s ease-out;
+    transition: background-color 0.4s ease-out;
 }
 
 #markers {
@@ -221,7 +209,6 @@ body.light-mode {
     margin-bottom: 40px;
     font-size: 1.7em;
 }
-
 
 .marker {
     position: absolute;
@@ -242,7 +229,6 @@ body.light-mode {
 .marker-large .marker-line {
     height: 20px;
     width: 2px;
-    border-radius: 1px;
 }
 
 .marker-small .marker-line {
@@ -254,9 +240,6 @@ body.light-mode {
 }
 
 /* Default alignment for 24-hour markers */
-#markers .marker {
-    top: 0;
-}
 #markers .marker-label {
     margin-top: 2px;
     margin-bottom: 0;
@@ -277,22 +260,10 @@ body.light-mode {
 #hour-markers .marker-large .marker-line {
     height: 30px;
     width: 2px;
-    border-radius: 1px;
 }
 
 
 .marker-large .marker-label {
     font-size: 2em;
     font-weight: bold;
-}
-
-
-.marker-start {
-    left: 0;
-    transform: translateX(-50%);
-}
-
-.marker-end {
-    left: 100%;
-    transform: translateX(-50%);
 }

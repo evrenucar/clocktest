@@ -60,15 +60,10 @@ function initializeAudio() {
     }
 }
 
-// Resume the audio context on the first user gesture
-function handleFirstGesture() {
-    initializeAudio();
-    document.removeEventListener('touchstart', handleFirstGesture);
-    document.removeEventListener('click', handleFirstGesture);
-}
-
-document.addEventListener('touchstart', handleFirstGesture, { once: true });
-document.addEventListener('click', handleFirstGesture, { once: true });
+// Resume the audio context on the first user gesture. { once: true } unregisters
+// these for us, so no manual removeEventListener is needed.
+document.addEventListener('touchstart', initializeAudio, { once: true });
+document.addEventListener('click', initializeAudio, { once: true });
 
 const settingsButton = document.getElementById('settings-button');
 const settingsPanel = document.getElementById('settings-panel');
@@ -243,7 +238,7 @@ function playHourlyChirp() {
     midTone.connect(envelope);
     highTone.connect(envelope);
     
-    // Play 3-note melody: C-E-G
+    // Play 3-note melody: E3-F3-G3
     lowTone.start();
     envelope.triggerAttackRelease(1.0);
     
@@ -287,7 +282,7 @@ function playQuarterChirp() {
     highTone.start();
     envelope.triggerAttackRelease(0.4);
     
-    // Second note (E) after 1.2 second gap
+    // Second note (E) after 0.9 second gap
     setTimeout(() => {
         lowTone.start();
         envelope.triggerAttackRelease(0.6);
@@ -381,11 +376,6 @@ function createMarkers() {
         } else {
             marker.classList.add('marker-small');
         }
-        if (i === 0) {
-            marker.classList.add('marker-start');
-        } else if (i === 24) {
-            marker.classList.add('marker-end');
-        }
         marker.style.left = (i / 24) * 100 + '%';
 
         const line = document.createElement('div');
@@ -413,12 +403,10 @@ function createHourMarkers() {
         }
         marker.style.left = (i / 60) * 100 + '%';
 
-        if (i % 15 === 0 || i === 5 || i === 10 || i === 20 || i === 25 || i === 35 || i === 40 || i === 50 || i === 55) {
-            const label = document.createElement('div');
-            label.classList.add('marker-label');
-            label.textContent = i;
-            marker.appendChild(label);
-        }
+        const label = document.createElement('div');
+        label.classList.add('marker-label');
+        label.textContent = i;
+        marker.appendChild(label);
 
         const line = document.createElement('div');
         line.classList.add('marker-line');
@@ -490,10 +478,10 @@ function updateHourNumbersVisibility() {
 }
 
 function updateAccentColor() {
-    const color = `hsl(${progressHue}, ${progressSaturation}%, 50%)`;
+    // style.css derives --progress-color from these two, so setting it here as well
+    // would just be a third copy of the same value.
     document.documentElement.style.setProperty('--progress-hue', progressHue);
     document.documentElement.style.setProperty('--progress-saturation', progressSaturation + '%');
-    document.documentElement.style.setProperty('--progress-color', color);
 }
 
 function updateNightFilter() {
