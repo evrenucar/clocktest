@@ -7,23 +7,23 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <button id="settings-button">&#9881;</button>
+    <button id="settings-button" aria-label="Settings">&#9881;</button>
     <div id="settings-panel">
         <div class="setting-row">
             <label><input type="checkbox" id="hourly-ding"> Hour Sound</label>
-            <button id="test-hourly">Test</button>
+            <button id="test-hourly" aria-label="Test hour sound">Test</button>
         </div>
         <div class="setting-row">
             <label><input type="checkbox" id="quarter-ding"> 15 minute sound</label>
-            <button id="test-quarter">Test</button>
+            <button id="test-quarter" aria-label="Test 15 minute sound">Test</button>
         </div>
         <div class="setting-row">
             <label><input type="checkbox" id="minute-ding"> Minute Sound</label>
-            <button id="test-minute">Test</button>
+            <button id="test-minute" aria-label="Test minute sound">Test</button>
         </div>
         <div class="setting-row">
             <label><input type="checkbox" id="tick-tock"> Second Tick-Tock</label>
-            <button id="test-tick-tock">Test</button>
+            <button id="test-tick-tock" aria-label="Test second tick-tock">Test</button>
         </div>
         <div class="setting-row">
             <label>Volume <input type="range" id="volume" min="0" max="1" step="0.01"></label>
@@ -67,7 +67,9 @@
         </div>
         <div id="markers" class="toggle-target"></div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/tone@14"></script>
+    <!-- Pinned: tone@14 is a floating range, so the served bytes could change
+         without warning. 14.9.17 is what that range currently resolves to. -->
+    <script src="https://cdn.jsdelivr.net/npm/tone@14.9.17/build/Tone.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
