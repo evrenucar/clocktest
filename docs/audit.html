@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>clocktest — audit &amp; plan</title>
+<style>
+:root{
+  --bg:#151515; --panel:#1d1d1d; --panel2:#242424; --line:#333;
+  --fg:#e8e8e8; --dim:#9a9a9a; --accent:hsl(60,50%,50%);
+  --bug:#ff6b5e; --dead:#6ec1ff; --redun:#c48cff; --hyg:#7fd18a; --state:#ffb454;
+}
+body.light{
+  --bg:#f4f4f2; --panel:#fff; --panel2:#ebebe8; --line:#d5d5d0;
+  --fg:#1a1a1a; --dim:#5c5c5c; --accent:hsl(45,70%,38%);
+  --bug:#c3241a; --dead:#0b5fa5; --redun:#6a2fa8; --hyg:#1f7a33; --state:#9a5c00;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+code,.mono{font-family:"Cascadia Code",Consolas,Menlo,monospace;font-size:.88em}
+.wrap{max-width:1000px;margin:0 auto;padding:0 20px 100px}
+
+header{padding:36px 0 18px;border-bottom:1px solid var(--line)}
+h1{margin:0 0 6px;font-size:1.7rem;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+.sub{color:var(--dim);margin:0}
+
+.tally{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0 0}
+.tally div{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:9px 14px;min-width:88px}
+.tally b{display:block;font-size:1.45rem;line-height:1.1}
+.tally small{color:var(--dim);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}
+
+.bar{position:sticky;top:0;z-index:50;background:var(--bg);
+  border-bottom:1px solid var(--line);padding:12px 0;margin-bottom:8px}
+.bar .inner{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#q{flex:1;min-width:190px;background:var(--panel);border:1px solid var(--line);
+  color:var(--fg);border-radius:7px;padding:8px 11px;font-size:.9rem;outline:none}
+#q:focus{border-color:var(--accent)}
+.chip{background:var(--panel);border:1px solid var(--line);color:var(--dim);
+  border-radius:20px;padding:6px 13px;font-size:.82rem;cursor:pointer;white-space:nowrap}
+.chip:hover{color:var(--fg)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#151515;font-weight:600}
+body.light .chip.on{color:#fff}
+
+.prog{margin-top:10px;display:flex;align-items:center;gap:11px;font-size:.8rem;color:var(--dim)}
+.track{flex:1;height:7px;background:var(--panel2);border-radius:4px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--accent);border-radius:4px;transition:width .25s}
+
+h2{font-size:1.02rem;margin:34px 0 12px;padding-bottom:7px;
+  border-bottom:1px solid var(--line);letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
+
+.item{display:flex;gap:12px;background:var(--panel);border:1px solid var(--line);
+  border-left:3px solid var(--k);border-radius:8px;padding:13px 15px;margin-bottom:9px}
+.item[data-c=bug]{--k:var(--bug)} .item[data-c=dead]{--k:var(--dead)}
+.item[data-c=redun]{--k:var(--redun)} .item[data-c=hyg]{--k:var(--hyg)}
+.item[data-c=state]{--k:var(--state)}
+.item.done{opacity:.42}
+.item.done .t{text-decoration:line-through}
+.item input{margin-top:4px;width:16px;height:16px;accent-color:var(--accent);
+  cursor:pointer;flex:none}
+.body{flex:1;min-width:0}
+.t{font-weight:600;margin-bottom:3px}
+.n{color:var(--k);font-weight:700;margin-right:7px}
+.loc{font-family:"Cascadia Code",Consolas,Menlo,monospace;font-size:.79rem;
+  color:var(--dim);margin-bottom:6px;word-break:break-word}
+.d{color:var(--fg);opacity:.87;font-size:.9rem}
+.d p{margin:0 0 7px} .d p:last-child{margin:0}
+pre{background:var(--panel2);border:1px solid var(--line);border-radius:6px;
+  padding:9px 11px;overflow-x:auto;margin:8px 0;font-size:.82rem}
+.tag{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+  border-radius:4px;padding:1px 7px;font-size:.7rem;color:var(--dim);
+  text-transform:uppercase;letter-spacing:.05em;margin-left:6px;vertical-align:2px}
+
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.88rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--panel2);font-size:.76rem;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--dim);white-space:nowrap}
+tbody tr:nth-child(even){background:var(--panel)}
+
+.note{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:8px;padding:13px 16px;margin:12px 0}
+.note h3{margin:0 0 7px;font-size:.95rem}
+.note ul{margin:6px 0 0;padding-left:19px} .note li{margin-bottom:5px}
+.empty{display:none;color:var(--dim);padding:36px 0;text-align:center}
+
+#theme{position:fixed;bottom:18px;right:18px;z-index:60;background:var(--panel);
+  border:1px solid var(--line);color:var(--fg);border-radius:20px;padding:8px 15px;
+  cursor:pointer;font-size:.82rem}
+@media(max-width:620px){.tally div{flex:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>clocktest — <span>audit &amp; plan</span></h1>
+  <p class="sub">4 files &middot; 941 lines &middot; 1 dependency (Tone.js via CDN) &middot; no build, no tests</p>
+  <div class="tally">
+    <div><b>37</b><small>findings</small></div>
+    <div><b style="color:var(--bug)">6</b><small>bugs</small></div>
+    <div><b style="color:var(--dead)">10</b><small>dead code</small></div>
+    <div><b style="color:var(--redun)">10</b><small>redundancy</small></div>
+    <div><b style="color:var(--hyg)">9</b><small>hygiene</small></div>
+    <div><b style="color:var(--state)">2</b><small>repo state</small></div>
+  </div>
+</header>
+
+<div class="bar"><div class="inner">
+  <input id="q" placeholder="Search findings, files, line numbers…">
+  <button class="chip on" data-f="all">All</button>
+  <button class="chip" data-f="bug">Bugs</button>
+  <button class="chip" data-f="dead">Dead code</button>
+  <button class="chip" data-f="redun">Redundancy</button>
+  <button class="chip" data-f="hyg">Hygiene</button>
+  <button class="chip" data-f="state">Repo state</button>
+  <button class="chip" data-f="todo">Not done</button>
+</div>
+<div class="prog">
+  <span id="cnt">0 / 37</span>
+  <div class="track"><div class="fill" id="fill"></div></div>
+  <button class="chip" id="reset">Reset</button>
+</div></div>
+
+<!-- ============ PLAN ============ -->
+<h2 id="plan-h">The plan — 37 findings, 19 done, 18 deferred, 4 commits</h2>
+
+<div class="note">
+  <h3>Cut from the plan first</h3>
+  <ul>
+    <li><b>#6 dissolves into #4.</b> The double-tick is a symptom of the drifting scheduler. Fixing the scheduler makes the dedupe guard redundant. Root cause, not symptom patch.</li>
+    <li><b>#5 mostly dissolves too.</b> A backgrounded tab can't meaningfully chime anyway.</li>
+    <li><b>#17–24, #25, #33, #34 deferred.</b> Nothing user-visible.</li>
+    <li><b>#34 specifically — no test file.</b> Walking back my own audit item: a test runner with fake timers for a 4-file static clock is exactly the over-engineering to avoid. The check is a 2-minute browser observation.</li>
+    <li><b>#30, #31, #32, #35 ride along free</b> inside commits already touching those lines. Never their own pass.</li>
+  </ul>
+</div>
+
+<table>
+<thead><tr><th>#</th><th>Commit</th><th>Items</th><th>Risk</th></tr></thead>
+<tbody>
+<tr><td><b>0</b></td><td><code>git revert --abort &amp;&amp; git pull --ff-only</code></td><td>36, 37</td>
+    <td>None. Everything else lands on stale code without it.</td></tr>
+<tr><td><b>A</b></td><td>Deletions, provably behavior-neutral</td>
+    <td>7, 8, 9, 10, 11, 12, 13, 16, 26, 30, 31, 32, 35</td><td>Near-zero. Eyeball only.</td></tr>
+<tr><td><b>B</b></td><td>The three real bugs</td><td>1, 2, 4, 14, 15</td>
+    <td>Real. Needs the browser check.</td></tr>
+<tr><td><b>C</b></td><td>a11y + pin Tone.js</td><td>27, 28, 29</td>
+    <td>Near-zero. Three attributes and a version number.</td></tr>
+<tr><td><b>D</b></td><td>Gated on the decision below</td><td>3</td><td>Small, once the question is answered.</td></tr>
+</tbody>
+</table>
+
+<div class="note">
+  <h3>Why A and B are separate</h3>
+  <p>It's the one piece of structure worth keeping. When something breaks next week, "did it break in the
+  no-op commit or the behavior commit" is free to answer.</p>
+  <p style="margin-top:7px"><b>#14/#15 moved from A to B.</b> Deleting <code>audioInitialized</code> also means deleting
+  the <code>updateProgress</code> guard that reads it — that's audio behavior, so it doesn't belong in the
+  provably-neutral commit. Same code as #2 anyway.</p>
+</div>
+
+<div class="note">
+  <h3>One decision blocks item 3</h3>
+  <p>The bar toggles overwrite the saved "Marker numbers" preference. Two readings, materially different work:</p>
+  <ul>
+    <li><b>Coupled by design</b> → delete both number checkboxes from the settings panel. Simpler UI, ~20 lines gone.</li>
+    <li><b>Independent</b> → delete the else-branches so the numbers keep their own state.</li>
+  </ul>
+  <p style="margin-top:7px">Everything else proceeds without the answer.</p>
+</div>
+
+<div class="note">
+  <h3>Verification — the whole suite</h3>
+  <p>Open <code>index.html</code> in Chrome, tick-tock on, watch for 90 seconds:</p>
+  <ul>
+    <li>one tick per second, no doubles, no drift against the system clock &rarr; <b>#4</b></li>
+    <li>drag the accent slider — rainbow track and colored thumb both render &rarr; <b>#1, #16</b></li>
+    <li>toggle every checkbox once &rarr; <b>#3, #10, #12</b></li>
+    <li>leave it running, DevTools memory doesn't climb &rarr; <b>#2</b></li>
+  </ul>
+  <p style="margin-top:7px">Four things, two minutes, covers everything commits A and B touch.</p>
+</div>
+
+<!-- ============ BUGS ============ -->
+<h2>Bugs — behavior is wrong today</h2>
+
+<div class="item" data-c="bug" data-i="1"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">1</span>Slider CSS never applies in any browser<span class="tag">fix</span></div>
+<div class="loc">style.css:131, 147, 154</div><div class="d">
+<pre>#color-slider::-webkit-slider-runnable-track,
+#color-slider::-moz-range-track { ... }</pre>
+<p>One unrecognized selector invalidates the <b>entire</b> group. Chrome drops the rule (doesn't know
+<code>-moz-</code>), Firefox drops it (doesn't know <code>-webkit-</code>). The rainbow track and the colored
+thumb render in no browser at all.</p>
+<p><b>Fix:</b> split into separate rules, one per vendor prefix.</p>
+</div></div></div>
+
+<div class="item" data-c="bug" data-i="2"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">2</span>playMinuteChirp leaks a synth every minute<span class="tag">fix</span></div>
+<div class="loc">script.js:312</div><div class="d">
+<p>Allocates a <code>Tone.Synth</code>, never disposes it. The comment on <code>tickSynth</code> at line 39 names
+this exact failure mode — "memory buildup and audio stuttering". Hourly and quarter chirps both dispose
+correctly; this one doesn't. <b>1440 leaked synths/day.</b></p>
+<p><b>Fix:</b> hoist to a module-level synth like <code>tickSynth</code>, or dispose after ~500ms.</p>
+</div></div></div>
+
+<div class="item" data-c="bug" data-i="3"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">3</span>Toggling a bar stomps the saved number preference<span class="tag">decision</span></div>
+<div class="loc">script.js:441, 464</div><div class="d">
+<p>Both <code>updateHourBarVisibility</code> and <code>updateProgressBarVisibility</code> unconditionally force
+<code>showHourNumbers = showHourBar</code> <b>and write it to localStorage</b>. The separate "Marker numbers"
+checkboxes cannot hold a setting across a bar toggle.</p>
+<p><b>Fix:</b> either the coupling is intended (delete the two checkboxes) or it isn't (delete the
+else-branches). ~16 lines go either way. <b>Needs your call.</b></p>
+</div></div></div>
+
+<div class="item" data-c="bug" data-i="4"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">4</span>Tick scheduler drifts<span class="tag">fix</span></div>
+<div class="loc">script.js:525 (local) and origin/main</div><div class="d">
+<p>Local computes <code>delay</code> from a timestamp taken <i>before</i> <code>updateProgress()</code> runs.
+<code>origin/main</code> replaced the whole thing with <code>setInterval(1000)</code>, which accumulates drift and
+gets throttled in background tabs. Both walk off the second boundary — the opposite of what the commits
+titled "Fix clock running issue" intended.</p>
+<pre>const tick = () =&gt; { updateProgress(); setTimeout(tick, 1000 - Date.now() % 1000); };
+tick();</pre>
+<p>2 lines replacing 9. Re-anchors to the wall clock on every tick.</p>
+</div></div></div>
+
+<div class="item" data-c="bug" data-i="5"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">5</span>Skipped seconds silently drop chimes<span class="tag">deferred</span></div>
+<div class="loc">script.js:364-376</div><div class="d">
+<p>The <code>lastHourPlayed</code> / <code>lastQuarterPlayed</code> / <code>lastMinutePlayed</code> guards suppress a
+<i>double</i> fire but cannot recover a <i>skipped</i> second. If the tab is throttled past
+<code>seconds === 0</code>, the hourly chime is lost with no trace.</p>
+<p>Mostly downstream of #4. A backgrounded tab can't meaningfully chime anyway — leaving it.</p>
+</div></div></div>
+
+<div class="item" data-c="bug" data-i="6"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">6</span>Tick-tock has no second-dedupe<span class="tag">dissolves into #4</span></div>
+<div class="loc">script.js:379</div><div class="d">
+<p>Plays on every <code>updateProgress</code> call, unlike the other three sounds which all check a
+<code>last*Played</code> guard. A double-fire is an audible double tick — this is the reported "stutter".</p>
+<p>Fixing #4 guarantees exactly one fire per second boundary, so no separate guard is needed.</p>
+</div></div></div>
+
+<!-- ============ DEAD ============ -->
+<h2>Dead code — delete, zero behavior change</h2>
+
+<div class="item" data-c="dead" data-i="7"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">7</span>createHourMarkers label condition is always true<span class="tag">verified</span></div>
+<div class="loc">script.js:426</div><div class="d">
+<pre>if (i % 15 === 0 || i === 5 || i === 10 || i === 20 || i === 25 ||
+    i === 35 || i === 40 || i === 50 || i === 55) {</pre>
+<p>Loop is <code>i = 0; i &lt;= 60; i += 5</code>. The <code>% 15</code> arm covers 0/15/30/45/60; the literals cover
+the other eight. <b>Confirmed by execution — every value passes.</b> Delete the <code>if</code>, unindent.</p>
+</div></div></div>
+
+<div class="item" data-c="dead" data-i="8"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">8</span>Duplicated CSS block<span class="tag">delete</span></div>
+<div class="loc">style.css:154-159</div><div class="d">
+<p>Byte-for-byte duplicate of 147-152. Likely a failed attempt to fix #1 by copy-paste.</p>
+</div></div></div>
+
+<div class="item" data-c="dead" data-i="9"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">9</span>Dead <code>hidden</code> class<span class="tag">delete</span></div>
+<div class="loc">index.html:11</div><div class="d">
+<p><code>class="hidden"</code> on <code>#settings-panel</code>. No <code>.hidden</code> rule exists anywhere in the CSS —
+the panel is hidden by <code>#settings-panel { display: none }</code> and JS toggles <code>.visible</code>. The
+attribute does nothing.</p>
+</div></div></div>
+
+<div class="item" data-c="dead" data-i="10"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">10</span><code>.marker-start</code> / <code>.marker-end</code> are no-ops<span class="tag">delete</span></div>
+<div class="loc">style.css:289-297 and script.js:394-398</div><div class="d">
+<p>They set <code>left: 0</code> / <code>left: 100%</code> and <code>transform: translateX(-50%)</code>. All three values
+are already set — <code>left</code> by the inline <code>marker.style.left</code>, the transform by <code>.marker</code>
+itself. Delete both CSS rules <i>and</i> the JS branch that assigns the classes.</p>
+</div></div></div>
+
+<div class="item" data-c="dead" data-i="11"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">11</span>Redundant flex declaration<span class="tag">delete</span></div>
+<div class="loc">style.css:117-120</div><div class="d">
+<p><code>#color-slider-row, #saturation-slider-row { display: flex }</code> — <code>.setting-row</code> already sets
+<code>display: flex</code> at line 112.</p>
+</div></div></div>
+
+<div class="item" data-c="dead" data-i="12"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">12</span>Redundant top declaration<span class="tag">delete</span></div>
+<div class="loc">style.css:256-258</div><div class="d">
+<p><code>#markers .marker { top: 0 }</code> — <code>.marker</code> already has <code>top: 0</code> at line 227.</p>
+</div></div></div>
+
+<div class="item" data-c="dead" data-i="13"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">13</span>No-op listener removal<span class="tag">delete</span></div>
+<div class="loc">script.js:70-77</div><div class="d">
+<p><code>handleFirstGesture</code> calls <code>removeEventListener</code> on two listeners registered with
+<code>{ once: true }</code>. Both removes are no-ops.</p>
+</div></div></div>
+
+<div class="item" data-c="dead" data-i="14"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">14</span><code>audioInitialized</code> is redundant state<span class="tag">delete</span></div>
+<div class="loc">script.js:37</div><div class="d">
+<p>Duplicates <code>Tone.context.state</code>, which <code>initializeAudio</code> already checks directly. Read only
+by the currently-conflicted guard in <code>updateProgress</code>. Goes in commit B, not A — deleting it means
+deleting that guard too, and that's audio behavior.</p>
+</div></div></div>
+
+<div class="item" data-c="dead" data-i="15"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">15</span>Five redundant <code>initializeAudio()</code> calls<span class="tag">delete</span></div>
+<div class="loc">script.js:104, 219, 223, 227, 231</div><div class="d">
+<p>The document-level first-gesture listener has already fired for any of these clicks.</p>
+</div></div></div>
+
+<div class="item" data-c="dead" data-i="16"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">16</span><code>--progress-color</code> set twice<span class="tag">delete</span></div>
+<div class="loc">script.js:503-506</div><div class="d">
+<p><code>updateAccentColor</code> sets <code>--progress-color</code> explicitly, but <code>style.css:8</code> already derives
+it from <code>--progress-hue</code> + <code>--progress-saturation</code>. Setting the two inputs is sufficient. Delete
+the <code>const color</code> line and its <code>setProperty</code>.</p>
+</div></div></div>
+
+<!-- ============ REDUNDANCY ============ -->
+<h2>Redundancy / over-engineering</h2>
+
+<div class="item" data-c="redun" data-i="17"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">17</span>Twelve copy-pasted settings blocks<span class="tag">deferred</span></div>
+<div class="loc">script.js:1-29 (load), script.js:138-216 (persist)</div><div class="d">
+<p>Same three statements twelve times over. A table plus a loop cuts roughly 80 lines.</p>
+</div></div></div>
+
+<div class="item" data-c="redun" data-i="18"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">18</span>Elements cached, then re-queried anyway<span class="tag">deferred</span></div>
+<div class="loc">script.js:88, 90, 94 vs 356, 359, 362, 385, 415</div><div class="d">
+<p><code>timeDisplay</code>, <code>markers</code>, and <code>hourMarkers</code> are cached at module scope and then
+re-fetched with <code>getElementById</code> inside the functions. <b>3 redundant DOM lookups per second.</b>
+<code>#progress</code> and <code>#hour-progress</code> are never cached at all.</p>
+</div></div></div>
+
+<div class="item" data-c="redun" data-i="19"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">19</span>Two identical visibility functions<span class="tag">deferred</span></div>
+<div class="loc">script.js:486-500</div><div class="d">
+<p><code>updateNumbersVisibility</code> and <code>updateHourNumbersVisibility</code> have identical bodies, differing
+only in container and flag. One function, two arguments.</p>
+</div></div></div>
+
+<div class="item" data-c="redun" data-i="20"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">20</span><code>#markers</code> visibility controlled two ways at once<span class="tag">deferred</span></div>
+<div class="loc">script.js:464-483</div><div class="d">
+<p><code>classList.add('hidden-toggle')</code> on the container <b>and</b> inline <code>display</code> on each label.
+Two mechanisms for one piece of state. Pick one.</p>
+</div></div></div>
+
+<div class="item" data-c="redun" data-i="21"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">21</span>Greedy transition rule, patched five times<span class="tag">deferred</span></div>
+<div class="loc">style.css:28-30</div><div class="d">
+<p><code>body, body *</code> transitions every element in the document. Then five separate
+<code>transition: none</code> patches (lines 128, 144, 151, 158) and one override block (206-209) exist purely
+to undo it. Scope the original rule instead.</p>
+</div></div></div>
+
+<div class="item" data-c="redun" data-i="22"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">22</span><code>.toggle-target</code> fights its own overrides<span class="tag">deferred</span></div>
+<div class="loc">style.css:32-44</div><div class="d">
+<p><code>.toggle-target { overflow: hidden; max-height: 1000px }</code> — then three of the five toggle targets
+set <code>overflow: visible</code>, so the max-height clip does nothing for them and hiding relies purely on
+opacity. The two rules work against each other.</p>
+</div></div></div>
+
+<div class="item" data-c="redun" data-i="23"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">23</span><code>applyTheme</code> if/else<span class="tag">deferred</span></div>
+<div class="loc">script.js:513-518</div><div class="d">
+<p>Five lines that are one:</p>
+<pre>document.body.classList.toggle('light-mode', lightMode);</pre>
+</div></div></div>
+
+<div class="item" data-c="redun" data-i="24"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">24</span><code>initializeAudio</code> wraps an already-idempotent call<span class="tag">never</span></div>
+<div class="loc">script.js:52-67</div><div class="d">
+<p>Once the conflict resolves, the body is just <code>Tone.start()</code> — already idempotent, already returns a
+promise. Not worth its own change.</p>
+</div></div></div>
+
+<div class="item" data-c="redun" data-i="25"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">25</span>Tone.js for four beeps<span class="tag">deferred</span></div>
+<div class="loc">index.html:70</div><div class="d">
+<p>A ~200 KB Web Audio framework, loaded over the network, for one sine oscillator and an envelope. Native
+<code>AudioContext</code> covers all four sounds in roughly 20 lines and drops the CDN dependency entirely.
+Real work, not a one-liner — flagged, not proposed.</p>
+</div></div></div>
+
+<div class="item" data-c="redun" data-i="26"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">26</span><code>border-radius: 1px</code> three times<span class="tag">delete</span></div>
+<div class="loc">style.css:239, 244, 279</div><div class="d">
+<p>Declared three times on the marker line, and it has no visible effect on a 1–2px-wide element in the
+first place.</p>
+</div></div></div>
+
+<!-- ============ HYGIENE ============ -->
+<h2>Correctness-adjacent / hygiene</h2>
+
+<div class="item" data-c="hyg" data-i="27"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">27</span>Unpinned, unhashed, render-blocking CDN script<span class="tag">fix</span></div>
+<div class="loc">index.html:70</div><div class="d">
+<p><code>tone@14</code> is a floating major-version range on jsDelivr, with no SRI hash and no <code>defer</code>.
+The served bytes can change under you, and it blocks parsing. Pin the exact version.</p>
+</div></div></div>
+
+<div class="item" data-c="hyg" data-i="28"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">28</span>Settings button has no accessible name<span class="tag">fix</span></div>
+<div class="loc">index.html:10</div><div class="d">
+<p>A bare <code>&amp;#9881;</code> gear glyph. Add <code>aria-label="Settings"</code>. Accessibility basics are on the
+do-not-simplify list.</p>
+</div></div></div>
+
+<div class="item" data-c="hyg" data-i="29"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">29</span>Four buttons all labelled "Test"<span class="tag">fix</span></div>
+<div class="loc">index.html:14, 18, 22, 26</div><div class="d">
+<p>Indistinguishable to a screen reader. Each needs its own <code>aria-label</code>.</p>
+</div></div></div>
+
+<div class="item" data-c="hyg" data-i="30"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">30</span>Defaults declared in three places each<span class="tag">delete</span></div>
+<div class="loc">index.html:50 + script.js:25 + style.css:9 (and same for saturation, night filter)</div><div class="d">
+<p>hue 60, saturation 50, night filter 0 — each declared in HTML, JS, and CSS. Three places to forget.</p>
+<p>Delete the HTML <code>value=</code> attributes; JS already assigns them on load and CSS keeps the legitimate
+pre-paint fallback. Three copies down to two, and two are actually needed.</p>
+</div></div></div>
+
+<div class="item" data-c="hyg" data-i="31"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">31</span>Comments contradict the code<span class="tag">free</span></div>
+<div class="loc">script.js:252, 296</div><div class="d">
+<p>"Play 3-note melody: C-E-G" — the notes are E3, F3, G3. "Second note (E) after 1.2 second gap" — the
+timeout is 900ms.</p>
+</div></div></div>
+
+<div class="item" data-c="hyg" data-i="32"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">32</span>Stale container comment<span class="tag">free</span></div>
+<div class="loc">style.css:163</div><div class="d">
+<p>Says "half the page height"; the value is <code>55vh</code> locally, <code>50vh</code> on <code>origin/main</code>.</p>
+</div></div></div>
+
+<div class="item" data-c="hyg" data-i="33"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">33</span>Marker stretched by conflicting offsets<span class="tag">deferred</span></div>
+<div class="loc">style.css:265-267</div><div class="d">
+<p><code>#hour-markers .marker { bottom: 0 }</code> combined with <code>.marker { top: 0 }</code> stretches the
+absolutely-positioned marker to the full 30px container height. It works, but by accident rather than
+intent.</p>
+</div></div></div>
+
+<div class="item" data-c="hyg" data-i="34"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">34</span>No <code>.gitignore</code>, no tests<span class="tag">deferred</span></div>
+<div class="loc">repo root</div><div class="d">
+<p>Seven merged PRs (#19–#27) all titled some variation of "fix clock running issue" or "fix multiple UI
+issues", all touching the same two files. That churn is the signal.</p>
+<p>But a test runner with fake timers for a 4-file static clock is over-engineering. The 90-second browser
+check in the plan is the cheaper answer. Revisit if a third "fix clock running issue" PR appears.</p>
+</div></div></div>
+
+<div class="item" data-c="hyg" data-i="35"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">35</span>Formatting drift<span class="tag">free</span></div>
+<div class="loc">style.css:192, 206-209</div><div class="d">
+<p>Stray double blank line; 2-space indentation in an otherwise 4-space file.</p>
+</div></div></div>
+
+<!-- ============ STATE ============ -->
+<h2>Repo state</h2>
+
+<div class="item" data-c="state" data-i="36"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">36</span>Mid-revert, unresolved<span class="tag">blocking</span></div>
+<div class="loc">script.js — UU, 2 conflict hunks</div><div class="d">
+<p>A revert of <code>3bcb579</code> is in progress and stuck.</p>
+</div></div></div>
+
+<div class="item" data-c="state" data-i="37"><input type="checkbox"><div class="body">
+<div class="t"><span class="n">37</span>Behind a remote that already resolved this<span class="tag">blocking</span></div>
+<div class="loc">local main — 7 commits behind origin/main, fast-forwardable</div><div class="d">
+<p><code>origin/main</code> already contains the earlier revert (<code>0fd38e5</code>) <b>and</b> has already resolved
+both conflict hunks: it keeps the HEAD-side <code>initializeAudio</code> (the <code>Tone.context.state</code> check)
+and keeps the <code>updateProgress</code> audio-init guard.</p>
+<p>The revert is redundant work against a remote that moved the other way.</p>
+<pre>git revert --abort &amp;&amp; git pull --ff-only</pre>
+<p>Discards the in-progress revert. Nothing committed is lost — it's 2 unresolved hunks in the working tree.</p>
+</div></div></div>
+
+<h2>Verification notes</h2>
+<div class="note">
+  <ul>
+    <li><b>#7</b> confirmed by executing the condition over the loop range — all values pass.</li>
+    <li>A suspected <code>toLocaleTimeString('en-US', {hour12:false})</code> midnight bug (returning
+        <code>24:00:00</code>) was checked and does <b>not</b> reproduce on current ICU — returns
+        <code>00:30:05</code> correctly. <b>Not a finding.</b></li>
+    <li><b>#1, #8–16</b> confirmed by reading the files directly.</li>
+    <li><b>#36, #37</b> confirmed against <code>git status</code>, <code>git log HEAD..origin/main</code>, and
+        <code>git diff HEAD origin/main</code>.</li>
+  </ul>
+</div>
+
+<p class="empty" id="empty">No findings match.</p>
+</div>
+
+<button id="theme">Light</button>
+
+<script>
+const K='clocktest-audit-v1', items=[...document.querySelectorAll('.item')];
+let done=JSON.parse(localStorage.getItem(K)||'[]'), filter='all', q='';
+
+function paint(){
+  items.forEach(el=>{
+    const on=done.includes(el.dataset.i);
+    el.classList.toggle('done',on);
+    el.querySelector('input').checked=on;
+  });
+  document.getElementById('cnt').textContent=done.length+' / '+items.length;
+  document.getElementById('fill').style.width=(done.length/items.length*100)+'%';
+  apply();
+}
+function apply(){
+  let shown=0;
+  items.forEach(el=>{
+    const cat = filter==='all' || (filter==='todo' ? !el.classList.contains('done') : el.dataset.c===filter);
+    const txt = !q || el.textContent.toLowerCase().includes(q);
+    const vis = cat && txt;
+    el.style.display = vis?'':'none';
+    if(vis) shown++;
+  });
+  // hide section headings and plan blocks when narrowing
+  const narrow = filter!=='all' || q;
+  document.querySelectorAll('h2, .note, table').forEach(el=>{
+    if(el.id==='plan-h') return;
+    el.style.display = narrow?'none':'';
+  });
+  document.getElementById('plan-h').style.display = narrow?'none':'';
+  document.getElementById('empty').style.display = shown?'none':'block';
+}
+document.addEventListener('change',e=>{
+  if(!e.target.matches('.item input')) return;
+  const i=e.target.closest('.item').dataset.i;
+  done = e.target.checked ? [...done,i] : done.filter(x=>x!==i);
+  localStorage.setItem(K,JSON.stringify(done));
+  paint();
+});
+document.querySelectorAll('.chip[data-f]').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.chip[data-f]').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); filter=b.dataset.f; apply();
+});
+document.getElementById('q').oninput=e=>{q=e.target.value.toLowerCase().trim(); apply();};
+document.getElementById('reset').onclick=()=>{done=[];localStorage.removeItem(K);paint();};
+document.getElementById('theme').onclick=e=>{
+  const light=document.body.classList.toggle('light');
+  e.target.textContent=light?'Dark':'Light';
+  localStorage.setItem(K+'-theme',light?'light':'dark');
+};
+if(localStorage.getItem(K+'-theme')==='light'){
+  document.body.classList.add('light');
+  document.getElementById('theme').textContent='Dark';
+}
+paint();
+</script>
+</body>
+</html>

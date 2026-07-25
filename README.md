@@ -34,3 +34,30 @@ The night filter can be adjusted to pull whites closer to yellow for less eye-st
 
 Open `index.html` in your browser to see the clock in action. If you have any issues please report it and I'll get it fixed. Cheers!
 
+## Code audit
+
+[**Read the audit →**](https://evrenucar.github.io/clocktest/docs/audit.html) ([source](docs/audit.html))
+
+A code-quality audit of this repo covering all four files: 37 findings, grouped into bugs,
+dead code, redundancy, hygiene, and repo state. It also carries the plan for working through
+them — four commits, what was deliberately deferred and why, and a 90-second browser check
+that covers everything the fixes touch.
+
+The four findings that actually break something:
+
+- The accent colour slider's track and thumb styling renders in **no** browser — a
+  `-webkit-` and a `-moz-` selector are grouped in one rule, and one unrecognised selector
+  invalidates the whole group.
+- `playMinuteChirp` allocates a synth every minute and never disposes it. 1440 leaked
+  synths a day.
+- The tick scheduler drifts off the second boundary, which is what the recurring "fix clock
+  running issue" commits have been chasing.
+- Toggling either progress bar overwrites the saved "Marker numbers" preference in
+  localStorage, so those checkboxes can't hold a setting.
+
+The page is a self-contained HTML file — all CSS and JS inlined, no CDN, no build step. It
+works offline straight from disk. Search and filter the findings, and tick them off as you
+go; progress is stored in `localStorage`.
+
+Generated with [Claude Code](https://claude.com/claude-code).
+
