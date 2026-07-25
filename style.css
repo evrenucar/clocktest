@@ -10,6 +10,15 @@
     --progress-saturation: 50%;
     --marker-line-color: #fff;
     --night-filter: 0;
+    --hue-gradient: linear-gradient(to right,
+        hsl(0deg, var(--progress-saturation), 50%),
+        hsl(60deg, var(--progress-saturation), 50%),
+        hsl(120deg, var(--progress-saturation), 50%),
+        hsl(180deg, var(--progress-saturation), 50%),
+        hsl(240deg, var(--progress-saturation), 50%),
+        hsl(300deg, var(--progress-saturation), 50%),
+        hsl(360deg, var(--progress-saturation), 50%)
+    );
 }
 
 body {
@@ -123,26 +132,42 @@ body.light-mode {
     outline: none;
 }
 
-#color-slider::-webkit-slider-runnable-track,
-#color-slider::-moz-range-track {
+/* Vendor-prefixed pseudo-elements must live in separate rules. Grouping a
+   -webkit- selector with a -moz- one makes every browser discard the whole
+   rule, because one unrecognised selector invalidates the entire group. */
+#color-slider::-webkit-slider-runnable-track {
     height: 8px;
     border-radius: 4px;
-    background: linear-gradient(to right,
-        hsl(0deg, var(--progress-saturation), 50%),
-        hsl(60deg, var(--progress-saturation), 50%),
-        hsl(120deg, var(--progress-saturation), 50%),
-        hsl(180deg, var(--progress-saturation), 50%),
-        hsl(240deg, var(--progress-saturation), 50%),
-        hsl(300deg, var(--progress-saturation), 50%),
-        hsl(360deg, var(--progress-saturation), 50%)
-    );
+    background: var(--hue-gradient);
     transition: none;
 }
 
-#color-slider::-webkit-slider-thumb,
-#color-slider::-moz-range-thumb {
+#color-slider::-moz-range-track {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--hue-gradient);
+    transition: none;
+}
+
+/* A styled webkit thumb needs -webkit-appearance:none plus explicit
+   dimensions, otherwise it collapses to zero size and disappears. */
+#color-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
     background: hsl(var(--progress-hue), var(--progress-saturation), 50%);
-    border: none;
+    border: 2px solid var(--marker-line-color);
+    margin-top: -4px; /* centres a 16px thumb on the 8px track */
+    transition: none;
+}
+
+#color-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: hsl(var(--progress-hue), var(--progress-saturation), 50%);
+    border: 2px solid var(--marker-line-color);
     transition: none;
 }
 

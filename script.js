@@ -33,8 +33,6 @@ let lastQuarterPlayed = null;
 let lastMinutePlayed = null;
 let isTick = true; // true for tick, false for tock
 
-// Initialize audio context on first user interaction
-let audioInitialized = false;
 const gainNode = new Tone.Gain(volume).toDestination();
 // Single synth used for the tick/tock sound so we don't create a new
 // instance every second. Constantly creating synthesizers can cause
@@ -49,15 +47,21 @@ const tickSynth = new Tone.Synth({
     }
 }).connect(gainNode);
 
-function initializeAudio() {
-    // Start the Tone.js context only if it isn't already running
-    if (Tone.context.state !== 'running') {
-        Tone.start().then(() => {
-            audioInitialized = true;
-        });
-    } else {
-        audioInitialized = true;
+// Same reasoning as tickSynth: one instance, reused every minute.
+const minuteSynth = new Tone.Synth({
+    oscillator: { type: "sine" },
+    envelope: {
+        attack: 0.01,
+        decay: 0.02,
+        sustain: 0,
+        release: 0.1
     }
+}).connect(gainNode);
+
+// Tone.start() is already idempotent and Tone.context.state is the only real
+// source of truth, so a separate audioInitialized flag just duplicated it.
+function initializeAudio() {
+    if (Tone.context.state !== 'running') Tone.start();
 }
 
 // Resume the audio context on the first user gesture. { once: true } unregisters
@@ -90,7 +94,6 @@ const saturationSliderRow = document.getElementById('saturation-slider-row');
 const nightFilterSlider = document.getElementById('night-filter-slider');
 
 settingsButton.addEventListener('click', () => {
-    initializeAudio();
     settingsPanel.classList.toggle('visible');
 });
 
@@ -204,22 +207,12 @@ nightFilterSlider.addEventListener('input', () => {
     updateNightFilter();
 });
 
-document.getElementById('test-hourly').addEventListener('click', () => {
-    initializeAudio();
-    playHourlyChirp();
-});
-document.getElementById('test-quarter').addEventListener('click', () => {
-    initializeAudio();
-    playQuarterChirp();
-});
-document.getElementById('test-minute').addEventListener('click', () => {
-    initializeAudio();
-    playMinuteChirp();
-});
-document.getElementById('test-tick-tock').addEventListener('click', () => {
-    initializeAudio();
-    playTickTock();
-});
+// The document-level first-gesture listener has already run for any of these
+// clicks, so none of them need their own initializeAudio() call.
+document.getElementById('test-hourly').addEventListener('click', playHourlyChirp);
+document.getElementById('test-quarter').addEventListener('click', playQuarterChirp);
+document.getElementById('test-minute').addEventListener('click', playMinuteChirp);
+document.getElementById('test-tick-tock').addEventListener('click', playTickTock);
 
 function playHourlyChirp() {
     // Create a 3-note melody using FatOscillator as per documentation
@@ -297,25 +290,14 @@ function playQuarterChirp() {
 }
 
 function playMinuteChirp() {
-    // Create a double chirp for minute sound, similar to tick-tock
-    const chirp = new Tone.Synth({
-        oscillator: {
-            type: "sine"
-        },
-        envelope: {
-            attack: 0.01,
-            decay: 0.02,
-            sustain: 0,
-            release: 0.1
-        }
-    }).connect(gainNode);
-    
-    // First chirp
-    chirp.triggerAttackRelease("E4", "8n");
-    
+    // Reuses minuteSynth rather than allocating one per call. The old version
+    // created a Tone.Synth every minute and never disposed it, which is the
+    // same memory buildup the tickSynth comment above warns about.
+    minuteSynth.triggerAttackRelease("E4", "8n");
+
     // Second chirp after short delay
     setTimeout(() => {
-        chirp.triggerAttackRelease("E4", "8n");
+        minuteSynth.triggerAttackRelease("E4", "8n");
     }, 200);
 }
 
@@ -328,9 +310,6 @@ function playTickTock() {
 }
 
 function updateProgress() {
-    if ((secondTickTock || hourSound || quarterSound || minuteSound) && !audioInitialized) {
-        initializeAudio();
-    }
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
@@ -500,13 +479,13 @@ function applyTheme() {
 
 createMarkers();
 createHourMarkers();
+
+// Re-anchors to the wall clock on every tick. setInterval(1000) accumulates
+// drift and gets throttled in background tabs, so it slides off the second
+// boundary; recomputing the delay each time keeps it pinned to it.
 function scheduleUpdate() {
     updateProgress();
+    setTimeout(scheduleUpdate, 1000 - Date.now() % 1000);
 }
 
-const now = new Date();
-const initialDelay = 1000 - now.getMilliseconds();
-setTimeout(() => {
-    scheduleUpdate();
-    setInterval(scheduleUpdate, 1000);
-}, initialDelay);
+scheduleUpdate();
