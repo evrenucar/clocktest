@@ -395,49 +395,23 @@ function createHourMarkers() {
     }
 }
 
+// Hiding the bar hides its marker container too, so the numbers disappear with
+// it. It must not overwrite showHourNumbers, though: that is the user's own
+// setting and it has to survive the bar being toggled off and back on.
 function updateHourBarVisibility() {
     hourProgressBar.classList.toggle('hidden-toggle', !showHourBar);
     hourMarkers.classList.toggle('hidden-toggle', !showHourBar);
-    
-    if (!showHourBar) {
-        // If hour bar is hidden, also hide the hour marker numbers
-        showHourNumbers = false;
-        hourNumbersCheckbox.checked = false;
-        localStorage.setItem('showHourNumbers', false);
-        updateHourNumbersVisibility();
-    } else {
-        // If hour bar is shown, also show the hour marker numbers
-        showHourNumbers = true;
-        hourNumbersCheckbox.checked = true;
-        localStorage.setItem('showHourNumbers', true);
-        updateHourNumbersVisibility();
-    }
 }
 
 function updateDigitalClockVisibility() {
     timeDisplay.classList.toggle('hidden-toggle', !showDigitalClock);
 }
 
+// Same as updateHourBarVisibility: hide the markers with the bar, but leave
+// the user's showNumbers setting alone.
 function updateProgressBarVisibility() {
     progressBar.classList.toggle('hidden-toggle', !showProgressBar);
-    
-    if (!showProgressBar) {
-        // If progress bar is hidden, also hide the marker numbers and lines
-        showNumbers = false;
-        numbersCheckbox.checked = false;
-        localStorage.setItem('showNumbers', false);
-        updateNumbersVisibility();
-        
-        // Also hide the entire markers container (numbers + lines)
-        markers.classList.add('hidden-toggle');
-    } else {
-        // If progress bar is shown, show the markers container and numbers
-        markers.classList.remove('hidden-toggle');
-        showNumbers = true;
-        numbersCheckbox.checked = true;
-        localStorage.setItem('showNumbers', true);
-        updateNumbersVisibility();
-    }
+    markers.classList.toggle('hidden-toggle', !showProgressBar);
 }
 
 function updateNumbersVisibility() {
