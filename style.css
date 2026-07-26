@@ -187,11 +187,14 @@ body.light-mode {
     border-radius: 6px;
 }
 
+/* Anchored to the bar's top edge with a 10px gap, mirroring the 10px
+   margin-top that clears #markers from the bar below it. A fixed height here
+   would flex-shrink the marker lines instead, which is what pushed the large
+   ones 5px into the bar. */
 #hour-markers {
     position: absolute;
-    top: -25px;
+    bottom: calc(100% + 10px);
     width: 100%;
-    height: 30px;
     font-size: 12px;
 }
 
@@ -229,9 +232,12 @@ body.light-mode {
     font-size: 12px;
 }
 
+/* 70px, not 40px: the minute strip is absolutely positioned so it does not
+   push this out of the way, and the tall "0/15/30/45/60" labels now reach
+   higher than they used to. 40px let them sit on top of the clock. */
 #time-display {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 70px;
     font-size: 1.7em;
 }
 
@@ -270,8 +276,13 @@ body.light-mode {
     margin-bottom: 0;
 }
 
-/* Hour bar markers need numbers above and lines at bottom */
+/* Hour bar markers need numbers above and lines at bottom. Clearing the
+   inherited top:0 matters: with both edges pinned the marker box stretched to
+   the container and squashed every line to 10px, so large and small looked
+   identical. Anchored by bottom alone, each line keeps its declared height and
+   every line ends on the same baseline. */
 #hour-markers .marker {
+    top: auto;
     bottom: 0;
 }
 #hour-markers .marker-label {

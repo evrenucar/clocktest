@@ -82,4 +82,67 @@ test.describe('Clock Markers', () => {
       }
     });
   });
+
+  // The minute strip is absolutely positioned above its bar, so nothing in the
+  // normal flow keeps it off the bar or off the clock. These pin the geometry.
+  test.describe('marker clearance', () => {
+    const CLEARANCE = 10;
+
+    test('REGRESSION: every minute line stops 10px short of the hour bar', async ({ page }) => {
+      const gaps = await page.evaluate(() => {
+        const barTop = document.getElementById('hour-progress-bar').getBoundingClientRect().top;
+        return [...document.querySelectorAll('#hour-markers .marker')].map(m => ({
+          label: m.querySelector('.marker-label').textContent,
+          gap: Math.round(barTop - m.querySelector('.marker-line').getBoundingClientRect().bottom),
+        }));
+      });
+
+      expect(gaps).toHaveLength(13);
+      for (const { label, gap } of gaps) {
+        expect(gap, `minute marker "${label}" clearance`).toBe(CLEARANCE);
+      }
+    });
+
+    test('minute clearance matches the 24-hour strip below its bar', async ({ page }) => {
+      const { minute, day } = await page.evaluate(() => {
+        const line = sel => document.querySelector(sel).getBoundingClientRect();
+        const hourBarTop = document.getElementById('hour-progress-bar').getBoundingClientRect().top;
+        const dayBarBottom = document.getElementById('progress-bar').getBoundingClientRect().bottom;
+        return {
+          minute: Math.round(hourBarTop - line('#hour-markers .marker .marker-line').bottom),
+          day: Math.round(line('#markers .marker .marker-line').top - dayBarBottom),
+        };
+      });
+
+      expect(minute).toBe(day);
+    });
+
+    test('REGRESSION: minute labels do not overlap the digital clock', async ({ page }) => {
+      const overlapping = await page.evaluate(() => {
+        const clock = document.getElementById('time-display').getBoundingClientRect();
+        return [...document.querySelectorAll('#hour-markers .marker')]
+          .filter(m => {
+            const r = m.getBoundingClientRect();
+            return r.top < clock.bottom && r.bottom > clock.top;
+          })
+          .map(m => m.querySelector('.marker-label').textContent);
+      });
+
+      expect(overlapping).toEqual([]);
+    });
+
+    test('large minute lines stay taller than small ones', async ({ page }) => {
+      const { large, small } = await page.evaluate(() => {
+        const h = sel => Math.round(document.querySelector(sel).getBoundingClientRect().height);
+        return {
+          large: h('#hour-markers .marker-large .marker-line'),
+          small: h('#hour-markers .marker-small .marker-line'),
+        };
+      });
+
+      // A stretched marker box used to flex-shrink both to 10px, making the
+      // quarter-hour markers indistinguishable from the rest.
+      expect(large).toBeGreaterThan(small);
+    });
+  });
 });
