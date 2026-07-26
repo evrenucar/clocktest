@@ -33,34 +33,51 @@ let lastQuarterPlayed = null;
 let lastMinutePlayed = null;
 let isTick = true; // true for tick, false for tock
 
-const gainNode = new Tone.Gain(volume).toDestination();
-// Single synth used for the tick/tock sound so we don't create a new
-// instance every second. Constantly creating synthesizers can cause
-// memory buildup and audio stuttering after long periods of time.
-const tickSynth = new Tone.Synth({
-    oscillator: { type: "sine" },
-    envelope: {
-        attack: 0.01,
-        decay: 0.02,
-        sustain: 0,
-        release: 0.105
-    }
-}).connect(gainNode);
+// Audio is optional; the clock is not. Web Audio is missing from some browser
+// builds and withheld by some privacy settings, and every Tone constructor
+// throws when it is absent. Built at module scope and unguarded, that throw
+// took the whole script down with it -- no markers, no time, no clock. So build
+// the nodes inside a try and let audioReady gate every later use.
+let gainNode = null;
+let tickSynth = null;
+let minuteSynth = null;
+let audioReady = false;
 
-// Same reasoning as tickSynth: one instance, reused every minute.
-const minuteSynth = new Tone.Synth({
-    oscillator: { type: "sine" },
-    envelope: {
-        attack: 0.01,
-        decay: 0.02,
-        sustain: 0,
-        release: 0.1
-    }
-}).connect(gainNode);
+try {
+    gainNode = new Tone.Gain(volume).toDestination();
+
+    // One synth each, reused. Constructing a synth per call causes memory
+    // buildup and audio stuttering over long sessions.
+    tickSynth = new Tone.Synth({
+        oscillator: { type: "sine" },
+        envelope: {
+            attack: 0.01,
+            decay: 0.02,
+            sustain: 0,
+            release: 0.105
+        }
+    }).connect(gainNode);
+
+    minuteSynth = new Tone.Synth({
+        oscillator: { type: "sine" },
+        envelope: {
+            attack: 0.01,
+            decay: 0.02,
+            sustain: 0,
+            release: 0.1
+        }
+    }).connect(gainNode);
+
+    audioReady = true;
+} catch (err) {
+    // Degrade to silence, not to a blank page.
+    console.warn('Web Audio unavailable, sounds are disabled:', err.message);
+}
 
 // Tone.start() is already idempotent and Tone.context.state is the only real
 // source of truth, so a separate audioInitialized flag just duplicated it.
 function initializeAudio() {
+    if (!audioReady) return;
     if (Tone.context.state !== 'running') Tone.start();
 }
 
@@ -150,7 +167,9 @@ tickTockCheckbox.addEventListener('change', () => {
 volumeControl.addEventListener('input', () => {
     volume = parseFloat(volumeControl.value);
     localStorage.setItem('volume', volume);
-    gainNode.gain.value = volume;
+    // Still persisted without audio, so the setting survives into a browser
+    // that can play it.
+    if (audioReady) gainNode.gain.value = volume;
 });
 
 hourBarCheckbox.addEventListener('change', () => {
@@ -215,6 +234,7 @@ document.getElementById('test-minute').addEventListener('click', playMinuteChirp
 document.getElementById('test-tick-tock').addEventListener('click', playTickTock);
 
 function playHourlyChirp() {
+    if (!audioReady) return;
     // Create a 3-note melody using FatOscillator as per documentation
     const lowTone = new Tone.FatOscillator("E3", "triangle", 40);
     const midTone = new Tone.FatOscillator("F3", "triangle", 60);
@@ -257,6 +277,7 @@ function playHourlyChirp() {
 }
 
 function playQuarterChirp() {
+    if (!audioReady) return;
     // Create a 2-note descending melody for 15-minute sound
     const highTone = new Tone.FatOscillator("G3", "triangle", 40);
     const lowTone = new Tone.FatOscillator("E3", "triangle", 40);
@@ -290,6 +311,7 @@ function playQuarterChirp() {
 }
 
 function playMinuteChirp() {
+    if (!audioReady) return;
     // Reuses minuteSynth rather than allocating one per call. The old version
     // created a Tone.Synth every minute and never disposed it, which is the
     // same memory buildup the tickSynth comment above warns about.
@@ -302,6 +324,7 @@ function playMinuteChirp() {
 }
 
 function playTickTock() {
+    if (!audioReady) return;
     // Reuse the same synth instance and simply change the note. This
     // avoids allocating new Tone.Synth objects every second.
     const note = isTick ? "C4" : "C3";
