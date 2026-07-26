@@ -1,0 +1,13 @@
+{
+  "name": "clocktest",
+  "version": "1.0.0",
+  "private": true,
+  "description": "24 hour clock loader",
+  "scripts": {
+    "serve": "node serve.js",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}
