@@ -1,0 +1,36 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # --with-deps pulls the system libraries the Linux runner lacks. Without
+      # it firefox and webkit fail to launch even once their binaries download.
+      - run: npx playwright install --with-deps chromium firefox webkit
+
+      - run: npm test
+
+      # Traces are kept only for failures, so this uploads nothing on a green run.
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
