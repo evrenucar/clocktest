@@ -62,17 +62,26 @@ you go; progress is stored in `localStorage`.
 
 ## Tests
 
-85 Playwright tests across 10 spec files in `tests/`, covering the clock loop, both marker
-strips, the display toggles, theme and accent colour, keyboard navigation, settings
-persistence, layout at three viewports, and console and network health on load.
+94 Playwright tests in `tests/`, run against Chromium, Firefox and WebKit, so 282 runs in
+about two minutes. They cover the clock loop, both marker strips and their clearance from
+the bars, the display toggles, theme and accent colour, keyboard navigation, settings
+persistence, layout at three viewports, console and network health on load, and the page
+with Web Audio unavailable.
 
 ```
 npm install
-npx playwright install chromium
+npx playwright install chromium firefox webkit
 npm test
 ```
+
+GitHub Actions runs the same command on every push to `main` and every pull request.
 
 `serve.js` serves the repo on port 5173 using only the Node standard library; the Playwright
 config starts and stops it. Tests run against `http://` rather than `file://` because
 localStorage behaves inconsistently on a file origin.
+
+Three engines rather than one is deliberate. The slider bug below broke every browser because
+a `-webkit-` and a `-moz-` selector shared a rule, and Chromium cannot detect that on its own,
+so its guard has to read the CSS source text. Adding Firefox and WebKit is what surfaced the
+Web Audio crash.
 

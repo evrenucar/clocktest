@@ -124,15 +124,15 @@ tbody tr:nth-child(even){background:var(--panel)}
 </div></div>
 
 <!-- ============ PLAN ============ -->
-<h2 id="plan-h">The plan — 37 findings, 19 done, 18 deferred, 4 commits</h2>
+<h2 id="plan-h">The plan — 37 findings, 22 resolved, 15 open, 4 commits</h2>
 
 <div class="note">
   <h3>Cut from the plan first</h3>
   <ul>
     <li><b>#6 dissolves into #4.</b> The double-tick is a symptom of the drifting scheduler. Fixing the scheduler makes the dedupe guard redundant. Root cause, not symptom patch.</li>
     <li><b>#5 mostly dissolves too.</b> A backgrounded tab can't meaningfully chime anyway.</li>
-    <li><b>#17–24, #25, #33, #34 deferred.</b> Nothing user-visible.</li>
-    <li><b>#34 specifically — no test file.</b> Walking back my own audit item: a test runner with fake timers for a 4-file static clock is exactly the over-engineering to avoid. The check is a 2-minute browser observation.</li>
+    <li><b>#17–23, #25, #33 deferred.</b> Nothing user-visible.</li>
+    <li><b>#34 reversed and done.</b> This originally read "walking back my own audit item: a test runner for a 4-file static clock is over-engineering, the check is a 2-minute browser observation." That call was wrong. The suite that replaced the manual check is 94 tests across three engines, and writing it found two bugs the browser check had not: the minute markers running into their bar, and the whole clock failing to render where Web Audio is unavailable.</li>
     <li><b>#30, #31, #32, #35 ride along free</b> inside commits already touching those lines. Never their own pass.</li>
   </ul>
 </div>
@@ -450,12 +450,17 @@ intent.</p>
 </div></div></div>
 
 <div class="item" data-c="hyg" data-i="34"><input type="checkbox"><div class="body">
-<div class="t"><span class="n">34</span>No <code>.gitignore</code>, no tests<span class="tag">deferred</span></div>
+<div class="t"><span class="n">34</span>No <code>.gitignore</code>, no tests<span class="tag">done</span></div>
 <div class="loc">repo root</div><div class="d">
 <p>Seven merged PRs (#19–#27) all titled some variation of "fix clock running issue" or "fix multiple UI
 issues", all touching the same two files. That churn is the signal.</p>
-<p>But a test runner with fake timers for a 4-file static clock is over-engineering. The 90-second browser
-check in the plan is the cheaper answer. Revisit if a third "fix clock running issue" PR appears.</p>
+<p>This item first argued the opposite: that a test runner for a 4-file static clock was over-engineering,
+and a 90-second browser check was the cheaper answer. Both halves are now done. A <code>.gitignore</code>
+covers <code>node_modules/</code>, <code>test-results/</code> and <code>playwright-report/</code>, and
+<code>tests/</code> holds 94 Playwright tests run against chromium, firefox and webkit on every push.</p>
+<p>The browser check would not have caught either bug the suite found while being written. One is
+geometric and 5px wide; the other only appears where Web Audio is missing, which is not the browser
+anyone runs a manual check in.</p>
 </div></div></div>
 
 <div class="item" data-c="hyg" data-i="35"><input type="checkbox"><div class="body">
@@ -468,14 +473,17 @@ check in the plan is the cheaper answer. Revisit if a third "fix clock running i
 <h2>Repo state</h2>
 
 <div class="item" data-c="state" data-i="36"><input type="checkbox"><div class="body">
-<div class="t"><span class="n">36</span>Mid-revert, unresolved<span class="tag">blocking</span></div>
-<div class="loc">script.js — UU, 2 conflict hunks</div><div class="d">
-<p>A revert of <code>3bcb579</code> is in progress and stuck.</p>
+<div class="t"><span class="n">36</span>Mid-revert, unresolved<span class="tag">resolved</span></div>
+<div class="loc">script.js — was UU, 2 conflict hunks</div><div class="d">
+<p>A revert of <code>3bcb579</code> was in progress and stuck.</p>
+<p>Abandoned in favour of the remote's resolution, per #37. The working tree is clean.</p>
 </div></div></div>
 
 <div class="item" data-c="state" data-i="37"><input type="checkbox"><div class="body">
-<div class="t"><span class="n">37</span>Behind a remote that already resolved this<span class="tag">blocking</span></div>
-<div class="loc">local main — 7 commits behind origin/main, fast-forwardable</div><div class="d">
+<div class="t"><span class="n">37</span>Behind a remote that already resolved this<span class="tag">resolved</span></div>
+<div class="loc">local main — was 7 commits behind origin/main</div><div class="d">
+<p><b>Resolved:</b> local <code>main</code> and <code>origin/main</code> are in sync, and the fixes below are
+published.</p>
 <p><code>origin/main</code> already contains the earlier revert (<code>0fd38e5</code>) <b>and</b> has already resolved
 both conflict hunks: it keeps the HEAD-side <code>initializeAudio</code> (the <code>Tone.context.state</code> check)
 and keeps the <code>updateProgress</code> audio-init guard.</p>
