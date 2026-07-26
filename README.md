@@ -76,5 +76,3 @@ npm test
 config starts and stops it. Tests run against `http://` rather than `file://` because
 localStorage behaves inconsistently on a file origin.
 
-Generated with [Claude Code](https://claude.com/claude-code).
-
